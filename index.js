@@ -1,6 +1,6 @@
 /**
  * Node entry.
- * Wraps node-speaker to ensure output format.
+ * Wraps node-speaker to ensure format.
  * @module audio-speaker
  */
 

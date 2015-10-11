@@ -1,5 +1,6 @@
 /**
  * Send input data to an audioContext destination.
+ *
  * @module audio-speaker
  */
 
@@ -19,8 +20,10 @@ var convertSample = require('audio-pcm-format/sample');
  *
  * For realtime play it is necessary to make sure that
  * output buffer refills in equal intervals, regardless of the input data availability.
+ * In that, there is an audioBuffer for scheduled data to play
+ * and a data buffer with preloaded data.
  *
- * But output is also controls how other nodes are rendered, via back-pressure.
+ * Output also controls how other nodes are rendered, via back-pressure.
  * In that, it is possible to render sound in background faster than realtime.
  *
  * @constructor

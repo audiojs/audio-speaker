@@ -1,6 +1,4 @@
-Output PCM data to speaker, both for node and browser.
-For node it wraps [node-speaker](https://github.com/TooTallNate/node-speaker), extending available input formats and ensuring output format.
-For browser it uses web-audio-api cycled `audioBuffer` to provide minimal possible delay and to avoid GC glitches, comparing to `scriptProcessorNode`.
+> Output PCM stream to speaker in node or browser.
 
 [`npm install audio-speaker`](https://npmjs.org/package/audio-speaker)
 
@@ -14,7 +12,7 @@ Generator(function (time) {
 	return [Math.sin(τ * time * 441), Math.sin(τ * time * 439)];
 })
 .pipe(Speaker({
-	//PCM input format settings
+	//PCM input format defaults, optional.
 	channels: 2,
 	sampleRate: 44100,
 	byteOrder: 'LE',
