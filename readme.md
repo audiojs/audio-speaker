@@ -1,6 +1,6 @@
 > Output PCM stream to speaker in node or browser.
 
-[`npm install audio-speaker`](https://npmjs.org/package/audio-speaker)
+[![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
 
 ```js
 var Speaker = require('audio-speaker');
