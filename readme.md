@@ -22,3 +22,9 @@ Generator(function (time) {
 	interleaved: true
 }));
 ```
+
+> **Related**<br/>
+> [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
+> [alsa](http://npmjs.org/package/alsa) — output pcm stream to speaker in node.<br/>
+> [baudio](http://npmjs.org/package/baudio) — generate audio stream based on function in node<br/>
+> [webaudio](http://npmjs.org/package/webaudio) — generate audio stream based on function in browser
