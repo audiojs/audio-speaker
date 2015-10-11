@@ -1,0 +1,44 @@
+{
+  "name": "audio-speaker",
+  "version": "1.0.0",
+  "description": "Output any PCM audio stream to speaker, browser/node",
+  "main": "index.js",
+  "scripts": {
+    "watch": "watchify -r ./browser.js:./index.js -r audio-generator -d -o ./bundle.js",
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/audio-lab/speaker"
+  },
+  "keywords": [
+    "audio",
+    "pcm",
+    "speaker",
+    "web-audio",
+    "sound",
+    "sink"
+  ],
+  "browser": "./browser.js",
+  "author": "Deema Yvanow <dfcreative@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/audio-lab/speaker/issues"
+  },
+  "homepage": "https://github.com/audio-lab/speaker",
+  "devDependencies": {
+    "audio-generator": "^1.0.1",
+    "browserify": "^11.2.0",
+    "component-raf": "^1.2.0",
+    "watchify": "^3.4.0"
+  },
+  "peerDependencies": {
+    "speaker": "*"
+  },
+  "dependencies": {
+    "audio-context": "^0.1.0",
+    "audio-pcm-format": "^1.0.4",
+    "inherits": "^2.0.1",
+    "xtend": "^4.0.0"
+  }
+}
