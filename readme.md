@@ -23,6 +23,9 @@ Generator(function (time) {
 }));
 ```
 
+If installation process is unable to install `node-speaker` on windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
+
+
 > **Related**<br/>
 > [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
 > [alsa](http://npmjs.org/package/alsa) — output pcm stream to speaker in node.<br/>
