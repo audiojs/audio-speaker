@@ -32,7 +32,7 @@
     "component-raf": "^1.2.0",
     "watchify": "^3.4.0"
   },
-  "peerDependencies": {
+  "optionalDependencies": {
     "speaker": "*"
   },
   "dependencies": {
