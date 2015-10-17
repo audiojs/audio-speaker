@@ -1,6 +1,6 @@
 {
   "name": "audio-speaker",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Output any PCM audio stream to speaker, browser/node",
   "main": "index.js",
   "scripts": {
