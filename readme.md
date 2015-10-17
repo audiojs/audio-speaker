@@ -25,14 +25,14 @@ Generator(function (time) {
 }));
 ```
 
-#### &lt;audio-speaker/&gt;
+#### &lt;audio-speaker /&gt;
 
 ```sh
 browserify -r audio-element -r audio-speaker -o bundle.js
 ```
 
 ```html
-<script src="./deps-bundle.js"></script>
+<script src="./bundle.js"></script>
 <link rel="import" href="./node_modules/audio-generator"/>
 <link rel="import" href="./node_modules/audio-speaker"/>
 
@@ -41,7 +41,8 @@ browserify -r audio-element -r audio-speaker -o bundle.js
 ```
 
 
-> **Related**<br/>
+#### Related
+
 > [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
 > [alsa](http://npmjs.org/package/alsa) — output pcm stream to speaker in node.<br/>
 > [baudio](http://npmjs.org/package/baudio) — generate audio stream based on function in node<br/>
