@@ -36,8 +36,8 @@ browserify -r audio-element -r audio-speaker -o bundle.js
 <link rel="import" href="./node_modules/audio-generator"/>
 <link rel="import" href="./node_modules/audio-speaker"/>
 
-<audio-generator connect="audio-speaker"/>
-<audio-speaker/>
+<audio-generator connect="audio-speaker"></audio-generator>
+<audio-speaker></audio-speaker>
 ```
 
 
