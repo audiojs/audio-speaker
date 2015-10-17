@@ -4,7 +4,7 @@
   "description": "Output any PCM audio stream to speaker, browser/node",
   "main": "index.js",
   "scripts": {
-    "watch": "watchify -r ./browser.js:./index.js -r audio-generator -d -o ./bundle.js",
+    "watch": "watchify -r ./browser.js:./ -r audio-element -r audio-generator -r ./element.js:./element -d -o ./bundle.js",
     "test": "node test"
   },
   "repository": {
@@ -19,7 +19,9 @@
     "sound",
     "sink"
   ],
-  "browser": "./browser.js",
+  "browser": {
+    "./index.js": "./browser.js"
+  },
   "author": "Deema Yvanow <dfcreative@gmail.com>",
   "license": "MIT",
   "bugs": {
@@ -37,6 +39,7 @@
   },
   "dependencies": {
     "audio-context": "^0.1.0",
+    "audio-element": "^1.0.1",
     "audio-pcm-format": "^1.0.4",
     "inherits": "^2.0.1",
     "xtend": "^4.0.0"

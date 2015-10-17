@@ -1,7 +1,7 @@
 /**
- * @module  audio-speaker/debug
+ * Paint buffer state for each tick.
  *
- * Paint buffer state for each tick
+ * @module  audio-speaker/debug
  */
 
 var raf = require('component-raf');

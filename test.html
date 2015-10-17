@@ -1,5 +1,13 @@
 <!doctype html>
+
+<title>Audio-speaker browser and custom element test</title>
+
 <meta charset="utf-8"/>
+
+<script type="text/javascript" src="./bundle.js"></script>
+
+<link rel="import" href="."/>
+
 <style>
 	body {
 		margin: 1rem;
@@ -11,5 +19,15 @@
 		outline: 1px solid lightgray;
 	}
 </style>
-<script type="text/javascript" src="./bundle.js"></script>
+
+<!-- Default node tests -->
 <script type="text/javascript" src="./test.js"></script>
+
+<script type="text/javascript">
+	//test custom element
+	var Gen = require('audio-generator');
+
+	var speakerEl = document.createElement('audio-speaker');
+
+	Gen({duration: 1}).pipe(speakerEl.stream);
+</script>

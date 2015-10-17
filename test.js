@@ -1,4 +1,4 @@
-var Speaker = require('./index.js');
+var Speaker = require('./');
 var Generator = require('audio-generator');
 
 var generator = Generator({
@@ -8,7 +8,7 @@ var generator = Generator({
 			Math.sin(Math.PI * 2 * time * 438) / 5
 		]
 	},
-	duration: 10,
+	duration: 2,
 	float: true
 });
 
@@ -17,8 +17,3 @@ var speaker = Speaker({
 });
 
 generator.pipe(speaker);
-
-
-//TODO: test of resampling input stream
-//TODO: test of channels number
-//TODO:

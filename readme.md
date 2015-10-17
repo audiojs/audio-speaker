@@ -23,6 +23,14 @@ Generator(function (time) {
 }));
 ```
 
+```html
+<link rel="import" href="./node_modules/audio-generator"/>
+<link rel="import" href="./node_modules/audio-speaker"/>
+
+<audio-generator connect="audio-speaker"/>
+<audio-speaker/>
+```
+
 If installation process is unable to install `node-speaker` on windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
 
 

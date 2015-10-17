@@ -1,3 +1,5 @@
+* Decrease buffer, significantly. Make gain work realtime
+* Create scriptProcessorNode mode. As an alternative.
 * For old browsers generate sound like t='data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA',new Audio(t+btoa(t+S)).play()
 	* http://www.p01.org/JS1K_Speech_Synthesizer/
 
