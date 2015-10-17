@@ -25,7 +25,7 @@ Generator(function (time) {
 }));
 ```
 
-#### <audio-speaker/>
+#### &lt;audio-speaker/&gt;
 
 ```sh
 browserify -r audio-element -r audio-speaker -o bundle.js
