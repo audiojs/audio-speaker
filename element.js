@@ -1,10 +1,18 @@
 /**
  * <audio-speaker> html element
  *
+ * Does not export anything as it is not a module, it is pre-cooked web-component.
+ *
+ * To make it work, browserify bundle first with dependencies:
+ * `browserify -r audio-element -r audio-speaker`
+ * and connect it before the import link:
+ * <link rel="import" href="./node_modules/audio-speaker"/>
+ *
  * @module  audio-speaker/element
  */
 var Speaker = require('./');
 var AudioElement = require('audio-element');
+
 
 /**
  * Audio speaker element API

@@ -2,6 +2,8 @@
 
 [![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
 
+If installation process is unable to install `node-speaker` on windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
+
 ```js
 var Speaker = require('audio-speaker');
 var Generator = require('audio-generator');
@@ -23,15 +25,20 @@ Generator(function (time) {
 }));
 ```
 
+#### <audio-speaker/>
+
+```sh
+browserify -r audio-element -r audio-speaker -o bundle.js
+```
+
 ```html
+<script src="./deps-bundle.js"></script>
 <link rel="import" href="./node_modules/audio-generator"/>
 <link rel="import" href="./node_modules/audio-speaker"/>
 
 <audio-generator connect="audio-speaker"/>
 <audio-speaker/>
 ```
-
-If installation process is unable to install `node-speaker` on windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
 
 
 > **Related**<br/>
