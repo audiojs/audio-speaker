@@ -2,7 +2,7 @@
 
 [![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
 
-If installation process is unable to install `speaker` package on windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
+If installation process is unable to install `speaker` package in windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
 
 ```js
 var Speaker = require('audio-speaker');
@@ -25,7 +25,7 @@ Generator(function (time) {
 }));
 ```
 
-#### &lt;audio-speaker /&gt;
+#### &lt;audio-speaker&gt;&lt;/audio-speaker&gt;
 
 ```sh
 browserify -r audio-element -r audio-speaker -o bundle.js
