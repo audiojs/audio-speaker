@@ -9,9 +9,7 @@ var Writable = require('stream').Writable;
 var context = require('audio-context');
 var extend = require('xtend/mutable');
 var inherits = require('inherits');
-var methodSuffix = require('audio-pcm-format/method');
-var convertSample = require('audio-pcm-format/sample');
-// var debug = require('./debug');
+var pcm = require('pcm-util');
 
 
 /**
@@ -36,6 +34,8 @@ function Speaker (options) {
 	var self = this;
 
 	extend(self, options);
+
+	pcm.normalizeFormat(self);
 
 	//audioBufferSourceNode, main output
 	self.bufferNode = self.context.createBufferSource();
@@ -181,7 +181,7 @@ Speaker.prototype.tick = function () {
 Speaker.prototype._write = function (chunk, encoding, callback) {
 	var self = this;
 
-	var methName = 'read' + methodSuffix(self);
+	var methName = self.readMethodName;
 
 	var sampleSize = self.bitDepth / 8;
 	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
@@ -199,7 +199,7 @@ Speaker.prototype._write = function (chunk, encoding, callback) {
 	for (var i = 0; i < frameLength; i++) {
 		for (var channel = 0; channel < self.channels; channel++) {
 			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
-			value = convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
+			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
 			self.data[channel].push(value);
 		}
 	}
@@ -228,13 +228,7 @@ Speaker.prototype.context = context;
 
 
 /** PCM input format */
-Speaker.prototype.channels = 2;
-Speaker.prototype.sampleRate = 44100;
-Speaker.prototype.bitDepth = 16;
-Speaker.prototype.signed = true;
-Speaker.prototype.float = false;
-Speaker.prototype.byteOrder = 'LE';
-Speaker.prototype.interleaved = true;
+extend(Speaker.prototype, pcm.defaultFormat);
 
 
 /**
