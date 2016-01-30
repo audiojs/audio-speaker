@@ -1,3 +1,5 @@
+* Restrain buffers piping to node-speaker, bind to RT. Do not generate more than needed.
+	* node-speaker restrains pressure, but with a 3s buffer - it should be able to be regulated.
 * replace node-speaker with good implementation. It fails on estimating big buffers
 * Decrease buffer, significantly. Make gain work realtime
 * Flash fallback

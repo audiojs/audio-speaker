@@ -7,9 +7,7 @@
 var NodeSpeaker = require('speaker');
 var inherits = require('inherits');
 var extend = require('xtend/mutable');
-var os = require('os');
-var PcmFormat = require('audio-pcm-format');
-
+var Through = require('audio-through');
 
 /**
  * Speaker is just a format wrapper for node-speaker,
@@ -18,42 +16,40 @@ var PcmFormat = require('audio-pcm-format');
  *
  * @constructor
  */
-function Speaker (opts) {
-	if (!(this instanceof Speaker)) {
-		return new Speaker(opts);
+function AudioSpeaker (opts) {
+	if (!(this instanceof AudioSpeaker)) {
+		return new AudioSpeaker(opts);
 	}
 
-	extend(this, opts);
-
-	//default output format for node-speaker
-	var outputFormat = {
-		channels: this.channels,
-		interleaved: true,
-		bitDepth: 16,
-		signed: true
-	};
-
-	//init proper transformer
-	PcmFormat.call(this, this, outputFormat);
+	Through.call(this, opts);
 
 	//create node-speaker with default options - the most cross-platform case
-	this.speaker = new NodeSpeaker(outputFormat);
+	this.speaker = new NodeSpeaker({
+		channels: this.channels
+	});
 
 	this.pipe(this.speaker);
 }
 
-inherits(Speaker, PcmFormat);
+inherits(AudioSpeaker, Through);
 
 
-/** Input PCM options */
-Speaker.prototype.channels = 2;
-Speaker.prototype.sampleRate = 44100;
-Speaker.prototype.samplesPerFrame = undefined;
-Speaker.prototype.bitDepth = 16;
-Speaker.prototype.signed = true;
-Speaker.prototype.float = false;
-Speaker.prototype.byteOrder = 'function' == os.endianness ? os.endianness() : 'LE';
-Speaker.prototype.interleaved = true;
+/**
+ * Forced non-sink
+ */
+// AudioSpeaker.prototype.process = function (buffer, done) {
+// 	done(buffer);
+// }
 
 
-module.exports = Speaker;
+/**
+ * Predefined format for node-speaker
+ */
+extend(AudioSpeaker.prototype, {
+	interleaved: true,
+	bitDepth: 16,
+	signed: true
+});
+
+
+module.exports = AudioSpeaker;

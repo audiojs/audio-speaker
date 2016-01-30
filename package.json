@@ -1,7 +1,7 @@
 {
   "name": "audio-speaker",
   "version": "1.1.3",
-  "description": "Output any PCM audio stream to speaker, browser/node",
+  "description": "Output any audio stream to speaker, browser/node",
   "main": "index.js",
   "scripts": {
     "watch": "watchify -r ./browser.js:audio-speaker -r audio-element -r audio-generator -r ./element.js:./element -d -o ./bundle.js",
@@ -29,20 +29,24 @@
   },
   "homepage": "https://github.com/audio-lab/speaker",
   "devDependencies": {
-    "audio-generator": "^1.0.1",
+    "audio-buffer-utils": "^2.0.0",
+    "audio-generator": "^2.0.1",
     "browserify": "^11.2.0",
     "component-raf": "^1.2.0",
+    "pcm-util": "^2.0.2",
+    "tst": "^1.1.8",
     "watchify": "^3.4.0"
   },
   "optionalDependencies": {
-    "speaker": "*"
+    "speaker": "audio-lab/node-speaker"
   },
   "dependencies": {
+    "audio-buffer-utils": "^2.0.0",
     "audio-context": "^0.1.0",
     "audio-element": "^1.0.1",
-    "audio-pcm-format": "^1.0.4",
+    "audio-through": "^1.0.10",
     "inherits": "^2.0.1",
-    "pcm-util": "^1.1.10",
+    "pcm-util": "^2.0.1",
     "xtend": "^4.0.0"
   }
 }
