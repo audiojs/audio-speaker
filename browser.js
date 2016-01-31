@@ -1,15 +1,13 @@
 /**
- * Send input data to an audioContext destination.
- *
  * @module audio-speaker
  */
 
-
-var Writable = require('stream').Writable;
+var Through = require('../audio-through');
 var context = require('audio-context');
 var extend = require('xtend/mutable');
 var inherits = require('inherits');
 var pcm = require('pcm-util');
+var util = require('audio-buffer-utils');
 
 
 /**
@@ -29,34 +27,55 @@ var pcm = require('pcm-util');
 function Speaker (options) {
 	if (!(this instanceof Speaker)) return new Speaker(options);
 
-	Writable.call(this);
+	Through.call(this, options);
 
 	var self = this;
 
-	extend(self, options);
-
-	pcm.normalizeFormat(self);
-
-	//audioBufferSourceNode, main output
+	//audioBufferSourceNode
 	self.bufferNode = self.context.createBufferSource();
 	self.bufferNode.loop = true;
-
-	//keep sample rate of input stream to delegate resampling to audioContext
-	self.bufferNode.buffer = self.context.createBuffer(self.channels, self.bufferLength, self.sampleRate);
-	self.bufferNode.connect(self.context.destination);
-	self.bufferNode.start();
+	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
 	self.buffer = self.bufferNode.buffer;
 
-	//preserve channels data
-	self.channelBuffer = [];
-	for (var c = 0; c < self.channels; c++) {
-		self.channelBuffer[c] = self.buffer.getChannelData(c);
-	}
+
+	//scriptProcessor mode of rendering
+	self.scriptNode = self.context.createScriptProcessor(self.inputFormat.samplesPerFrame);
+	self.scriptNode.addEventListener('audioprocess', function (e) {
+		//FIXME: if GC (I guess) is clicked, this guy may just stop generating that evt
+		self.emit('tick', e.outputBuffer);
+	});
+
+	//add evt
+	self.once('end', function () {
+		self.bufferNode.stop();
+		self.scriptNode.disconnect();
+	});
+
+	//connect nodes to destination
+	self.bufferNode.connect(self.scriptNode);
+	self.scriptNode.connect(self.context.destination);
+
+	//start should be done after the connection, or there is a chance it won’t
+	setTimeout(function () {
+		self.bufferNode.start()
+	});
+
+
+	//ensure to send a couple of silence-buffers if connected source ends
+	self.on('pipe', function (src) {
+		src.once('end', function () {
+			self.write(util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame));
+			self.write(util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame));
+		});
+	});
+
+	return self;
+
 
 
 	//ready data to play, separated by channels
 	self.data = [];
-	for (var i = 0; i < self.channels; i++) {
+	for (var i = 0; i < self.inputFormat.channels; i++) {
 		self.data[i] = [];
 	}
 
@@ -69,12 +88,6 @@ function Speaker (options) {
 	//count represents the absolute data loaded in the audio buffer
 	self.count = 0;
 
-	//precalc format
-	if (self.float) {
-		self.signed = true;
-		self.bitDepth = 32;
-	}
-
 	//audio buffer realtime ticked cycle
 	self.tick();
 	self.tickInterval = setInterval(self.tick.bind(self));
@@ -82,7 +95,26 @@ function Speaker (options) {
 	return self;
 }
 
-inherits(Speaker, Writable);
+inherits(Speaker, Through);
+
+
+/**
+ * Whether to use scriptProcessor or other mode
+ */
+Speaker.prototype.mode = 'scriptNode';
+
+
+/**
+ * Prepare chunk to be sent to scriptNode or other node
+ */
+Speaker.prototype.process = function (buffer, done) {
+	var self = this;
+
+	self.once('tick', function (output) {
+		util.copy(buffer, output);
+		done();
+	});
+};
 
 
 /**
@@ -105,13 +137,13 @@ Speaker.prototype.tick = function () {
 	}
 
 	//fill chunk with available data and the rest - with zeros
-	var channelData;
+	var channelData = util.data(self.buffer);
 	var value;
 
 	for (var i = 0; i < chunkLength; i++) {
 		for (var channel = 0; channel < self.channels; channel++) {
 			channelData = self.data[channel];
-			channelBuffer = self.channelBuffer[channel];
+			channelData = self.channelData[channel];
 
 			if (channelData.length) {
 				value = channelData.shift();
@@ -120,14 +152,14 @@ Speaker.prototype.tick = function () {
 				value = 0;
 			}
 
-			channelBuffer[self.offset] = value;
+			channelData[self.offset] = value;
 		}
 
 		self.offset++;
 		self.count++;
 
 		// reset offset
-		if (self.offset >= channelBuffer.length) {
+		if (self.offset >= channelData.length) {
 			self.offset = 0;
 		}
 	}
@@ -178,34 +210,34 @@ Speaker.prototype.tick = function () {
  * Read data chunk from the buffer.
  * Schedule data chunk to audio destination.
  */
-Speaker.prototype._write = function (chunk, encoding, callback) {
-	var self = this;
+// Speaker.prototype._write = function (chunk, encoding, callback) {
+// 	var self = this;
 
-	var methName = self.readMethodName;
+// 	var methName = self.readMethodName;
 
-	var sampleSize = self.bitDepth / 8;
-	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
+// 	var sampleSize = self.bitDepth / 8;
+// 	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
 
-	//if data buffer is full - wait till the next tick
-	if (self.data[0].length + frameLength >= self.dataLength) {
-		self.once('tick', function () {
-			self._write(chunk, encoding, callback);
-		});
-		return;
-	}
+// 	//if data buffer is full - wait till the next tick
+// 	if (self.data[0].length + frameLength >= self.dataLength) {
+// 		self.once('tick', function () {
+// 			self._write(chunk, encoding, callback);
+// 		});
+// 		return;
+// 	}
 
-	//save the data
-	var offset, value;
-	for (var i = 0; i < frameLength; i++) {
-		for (var channel = 0; channel < self.channels; channel++) {
-			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
-			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
-			self.data[channel].push(value);
-		}
-	}
+// 	//save the data
+// 	var offset, value;
+// 	for (var i = 0; i < frameLength; i++) {
+// 		for (var channel = 0; channel < self.channels; channel++) {
+// 			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
+// 			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
+// 			self.data[channel].push(value);
+// 		}
+// 	}
 
-	callback();
-}
+// 	callback();
+// }
 
 
 /** Schedule set of chunks */
@@ -227,24 +259,21 @@ Speaker.prototype._write = function (chunk, encoding, callback) {
 Speaker.prototype.context = context;
 
 
-/** PCM input format */
-extend(Speaker.prototype, pcm.defaultFormat);
-
 
 /**
  * Samples per channel for audio buffer.
- * Small sizes are dangerous as far time between processor ticks
+ * Small sizes are dangerous as time between processor ticks
  * can be more time than the played buffer, especially due to GC.
  * If GC is noticeable - increase that.
  */
-Speaker.prototype.bufferLength = 256 * 16;
+// Speaker.prototype.bufferLength = 256 * 16;
 
 
 /**
  * Data buffer keeps all the input async data to provide realtime audiobuffer data.
  * Should be more than audio buffer size to always be in from of realtime sound.
  */
-Speaker.prototype.dataLength = Speaker.prototype.bufferLength * 2;
+// Speaker.prototype.dataLength = Speaker.prototype.bufferLength * 2;
 
 
 

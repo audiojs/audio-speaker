@@ -4,7 +4,7 @@
   "description": "Output any audio stream to speaker, browser/node",
   "main": "index.js",
   "scripts": {
-    "watch": "watchify -r ./browser.js:audio-speaker -r audio-element -r audio-generator -r ./element.js:./element -d -o ./bundle.js",
+    "test:browser": "budo test.js",
     "test": "node test"
   },
   "repository": {

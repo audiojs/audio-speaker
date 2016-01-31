@@ -35,14 +35,6 @@ inherits(AudioSpeaker, Through);
 
 
 /**
- * Forced non-sink
- */
-// AudioSpeaker.prototype.process = function (buffer, done) {
-// 	done(buffer);
-// }
-
-
-/**
  * Predefined format for node-speaker
  */
 extend(AudioSpeaker.prototype, {
