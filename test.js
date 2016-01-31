@@ -8,14 +8,16 @@ Through.log = true;
 var test = require('tst')//.only();
 
 
-test('Feed audio-through', function () {
+test.only('Feed audio-through', function () {
 	Generator({
 		generate: function (time) {
 			return [
-				Math.random()
+				Math.sin(Math.PI * 2 * time * 438 ) / 5,
+				Math.sin(Math.PI * 2 * time * 442 ) / 5
+				// Math.random()
 			]
 		},
-		duration: 0.4
+		duration: .4
 	}).pipe(Speaker());
 });
 

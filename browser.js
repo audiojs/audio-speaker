@@ -7,7 +7,7 @@ var context = require('audio-context');
 var extend = require('xtend/mutable');
 var inherits = require('inherits');
 var pcm = require('pcm-util');
-var util = require('audio-buffer-utils');
+var util = require('../audio-buffer-utils');
 
 
 /**
@@ -31,66 +31,28 @@ function Speaker (options) {
 
 	var self = this;
 
-	//audioBufferSourceNode
-	self.bufferNode = self.context.createBufferSource();
-	self.bufferNode.loop = true;
-	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
-	self.buffer = self.bufferNode.buffer;
-
-
-	//scriptProcessor mode of rendering
-	self.scriptNode = self.context.createScriptProcessor(self.inputFormat.samplesPerFrame);
-	self.scriptNode.addEventListener('audioprocess', function (e) {
-		//FIXME: if GC (I guess) is clicked, this guy may just stop generating that evt
-		self.emit('tick', e.outputBuffer);
-	});
-
-	//add evt
-	self.once('end', function () {
-		self.bufferNode.stop();
-		self.scriptNode.disconnect();
-	});
-
-	//connect nodes to destination
-	self.bufferNode.connect(self.scriptNode);
-	self.scriptNode.connect(self.context.destination);
-
-	//start should be done after the connection, or there is a chance it won’t
-	setTimeout(function () {
-		self.bufferNode.start()
-	});
+	if (self.mode === Speaker.SCRIPT_MODE) {
+		self.initScriptMode();
+	}
+	else {
+		self.initBufferMode();
+	}
 
 
 	//ensure to send a couple of silence-buffers if connected source ends
 	self.on('pipe', function (src) {
 		src.once('end', function () {
-			self.write(util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame));
-			self.write(util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame));
+			//FIXME: with no reason sometimes it does not send the data
+			//FIXME: resolve this issue, it should not be like that, write should work
+			var buf = util.shallow(self.buffer);
+
+			self.removeAllListeners();
+
+			self.offset = 0;
+			self.write(buf);
+			util.copy(buf, self.buffer);
 		});
 	});
-
-	return self;
-
-
-
-	//ready data to play, separated by channels
-	self.data = [];
-	for (var i = 0; i < self.inputFormat.channels; i++) {
-		self.data[i] = [];
-	}
-
-	self.lastTime = self.context.currentTime;
-	self.initTime = self.lastTime;
-
-	//offset points to the last loaded data in the audio buffer
-	self.offset = 0;
-
-	//count represents the absolute data loaded in the audio buffer
-	self.count = 0;
-
-	//audio buffer realtime ticked cycle
-	self.tick();
-	self.tickInterval = setInterval(self.tick.bind(self));
 
 	return self;
 }
@@ -99,9 +61,107 @@ inherits(Speaker, Through);
 
 
 /**
- * Whether to use scriptProcessor or other mode
+ * Whether to use scriptProcessorNode or other mode of rendering
  */
-Speaker.prototype.mode = 'scriptNode';
+Speaker.prototype.SCRIPT_MODE = 1;
+Speaker.prototype.BUFFER_MODE = 0;
+Speaker.prototype.mode = Speaker.prototype.BUFFER_MODE;
+
+
+/**
+ * Init scriptProcessor-based rendering.
+ * Each audioprocess event triggers tick, which releases pipe
+ *
+ * FIXME: this is really unstable scheduler. setTimeout-based one is a way better
+ */
+Speaker.prototype.initScriptMode = function () {
+	var self = this;
+
+	//buffer source node
+	self.bufferNode = self.context.createBufferSource();
+	self.bufferNode.loop = true;
+	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
+	self.buffer = self.bufferNode.buffer;
+
+	self.scriptNode = self.context.createScriptProcessor(self.inputFormat.samplesPerFrame);
+	self.scriptNode.addEventListener('audioprocess', function (e) {
+		util.copy(e.inputBuffer, e.outputBuffer);
+
+		//FIXME: if GC (I guess) is clicked, this guy may just stop generating that evt
+		//possibly there should be a promise-like thing, resetting scriptProcessor, or something... Like, N reserve scriptProcessors
+		self.emit('tick');
+	});
+
+
+	//once source self is finished - disconnect modules
+	self.once('end', function () {
+		self.bufferNode.stop();
+		self.scriptNode.disconnect();
+	});
+
+	//start should be done after the connection, or there is a chance it won’t
+	self.bufferNode.connect(self.scriptNode);
+	self.scriptNode.connect(self.context.destination);
+	self.bufferNode.start();
+
+	return self;
+};
+
+
+/**
+ * Buffer-based rendering.
+ * The schedule is triggered by setTimeout.
+ */
+Speaker.prototype.initBufferMode = function () {
+	var self = this;
+
+	//how many times output buffer contains input one
+	var FOLD = 2;
+
+	//buffer source node
+	self.bufferNode = self.context.createBufferSource();
+	self.bufferNode.loop = true;
+	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame * FOLD);
+	self.buffer = self.bufferNode.buffer;
+
+	//get channels data
+	var channelData = util.data(self.buffer);
+
+	//save time of start
+	var lastMoment = self.context.currentTime;
+	var initMoment = lastMoment;
+
+	//offset within the buffer
+	self.offset = undefined;
+
+	//audio buffer realtime ticked cycle
+	//FIXME: plan by context time instead of using the interval. Or ok? IDK.
+	setInterval(tick);
+
+	self.bufferNode.connect(self.context.destination);
+	self.bufferNode.start();
+
+	var lastOffset = 0;
+
+	//tick function - if the half-buffer is passed - emit the tick event, which will fill the buffer
+	function tick () {
+		var playedTime = self.context.currentTime - initMoment;
+		var playedCount = Math.round(playedTime * self.context.sampleRate);
+		var offsetCount = playedCount % self.buffer.length;
+
+		//displacement within the buffer
+		var offset = Math.floor(offsetCount / self.inputFormat.samplesPerFrame);
+
+		//if offset has changed - notify processor to provide a new piece of data
+		if (offset != lastOffset) {
+			lastOffset = offset;
+			self.offset = ((offset + 1) % FOLD) * self.inputFormat.samplesPerFrame;
+			self.emit('tick');
+		}
+	}
+
+	return self;
+}
 
 
 /**
@@ -110,134 +170,50 @@ Speaker.prototype.mode = 'scriptNode';
 Speaker.prototype.process = function (buffer, done) {
 	var self = this;
 
-	self.once('tick', function (output) {
-		util.copy(buffer, output);
+	//wait for played space is free
+	self.once('tick', function () {
+		//bring stream data to audio-context
+		util.copy(buffer, self.buffer, self.offset || 0);
+
+		//release cb
 		done();
 	});
 };
 
-
-/**
- * Ticking function.
- * Fills the audio buffer with data from the data buffer.
- */
-Speaker.prototype.tick = function () {
-	var self = this;
-
-	var now = self.context.currentTime - self.initTime;
-	var timeSpent = now - self.lastTime;
-	var playedCount = Math.round(now * self.context.sampleRate);
-
-	//min chunk size is the time passed
-	var chunkLength = Math.round(timeSpent * self.context.sampleRate);
-
-	//max chunk size is avail space up the next audio buffer cycle
-	if (self.count < playedCount) {
-		chunkLength = Math.max(chunkLength, (playedCount - self.count) + self.bufferLength );
-	}
-
-	//fill chunk with available data and the rest - with zeros
-	var channelData = util.data(self.buffer);
-	var value;
-
-	for (var i = 0; i < chunkLength; i++) {
-		for (var channel = 0; channel < self.channels; channel++) {
-			channelData = self.data[channel];
-			channelData = self.channelData[channel];
-
-			if (channelData.length) {
-				value = channelData.shift();
-			}
-			else {
-				value = 0;
-			}
-
-			channelData[self.offset] = value;
-		}
-
-		self.offset++;
-		self.count++;
-
-		// reset offset
-		if (self.offset >= channelData.length) {
-			self.offset = 0;
-		}
-	}
-
-	self.emit('tick');
-
-	self.lastTime = now;
-
-	/*
-	//debug
-	var count = self.count;
-	var offset = self.offset;
-
-	// var data = Array.from(self.data);
-	var data = [new Float32Array(self.buffer.length), new Float32Array(self.buffer.length)];
-	self.buffer.copyFromChannel(data[0], 0);
-	self.buffer.copyFromChannel(data[1], 1);
-
-	debug.draw(data, function (canvas) {
-		var ctx = canvas.getContext('2d');
-		var width = canvas.width;
-		var height = canvas.height;
-
-		var step = (width / data.length);
-
-		//paint current time
-		var currentTimeOffset = Math.floor(playedCount % data.length);
-		ctx.fillStyle = 'rgba(0,0,255,.2)';
-		ctx.fillRect(currentTimeOffset * step, 0, 1, height);
-		ctx.fillRect(currentTimeOffset * step, 0, 1, height);
-
-		//paint filled chunk
-		ctx.fillStyle = 'rgba(255,0,0,.2)';
-		ctx.fillRect(offset * step - 2, 0, 2, height);
-		ctx.fillRect(offset * step - 2, 0, 2, height);
-
-		//draw stats
-		ctx.fillStyle = 'rgba(255,255,255,.8)';
-		ctx.fillRect(0, height - 20, height - 5, width - 10);
-		ctx.fillStyle = 'black';
-		ctx.fillText(`${ playedCount }→${ playedCount + data.length } ${ count } ${ value===0 }`, 5, height - 5, width - 10);
-	});
-	*/
-}
 
 
 /**
  * Read data chunk from the buffer.
  * Schedule data chunk to audio destination.
  */
-// Speaker.prototype._write = function (chunk, encoding, callback) {
-// 	var self = this;
+/*Speaker.prototype._write = function (chunk, encoding, callback) {
+	var self = this;
 
-// 	var methName = self.readMethodName;
+	var methName = self.readMethodName;
 
-// 	var sampleSize = self.bitDepth / 8;
-// 	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
+	var sampleSize = self.bitDepth / 8;
+	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
 
-// 	//if data buffer is full - wait till the next tick
-// 	if (self.data[0].length + frameLength >= self.dataLength) {
-// 		self.once('tick', function () {
-// 			self._write(chunk, encoding, callback);
-// 		});
-// 		return;
-// 	}
+	//if data buffer is full - wait till the next tick
+	if (self.data[0].length + frameLength >= self.dataLength) {
+		self.once('tick', function () {
+			self._write(chunk, encoding, callback);
+		});
+		return;
+	}
 
-// 	//save the data
-// 	var offset, value;
-// 	for (var i = 0; i < frameLength; i++) {
-// 		for (var channel = 0; channel < self.channels; channel++) {
-// 			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
-// 			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
-// 			self.data[channel].push(value);
-// 		}
-// 	}
+	//save the data
+	var offset, value;
+	for (var i = 0; i < frameLength; i++) {
+		for (var channel = 0; channel < self.channels; channel++) {
+			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
+			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
+			self.data[channel].push(value);
+		}
+	}
 
-// 	callback();
-// }
+	callback();
+}*/
 
 
 /** Schedule set of chunks */
