@@ -1,8 +1,8 @@
-> Output PCM stream to speaker in node or browser.
+> Output stream to speaker in node or browser.
 
 [![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
 
-If installation process is unable to install `speaker` package in windows, try `npm install RTK/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
+If installation process is unable to install `speaker` package in windows, try `npm install audio-lab/node-speaker`. Otherwise, refer to [node-speaker issues](https://github.com/TooTallNate/node-speaker/issues).
 
 ```js
 var Speaker = require('audio-speaker');
@@ -25,25 +25,7 @@ Generator(function (time) {
 }));
 ```
 
-#### &lt;audio-speaker&gt;&lt;/audio-speaker&gt;
-
-```sh
-browserify -r audio-element -r audio-speaker -o bundle.js
-```
-
-```html
-<script src="./bundle.js"></script>
-<link rel="import" href="./node_modules/audio-generator"/>
-<link rel="import" href="./node_modules/audio-speaker"/>
-
-<audio-generator connect="audio-speaker"></audio-generator>
-<audio-speaker></audio-speaker>
-```
-
-
 #### Related
 
+> [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
 > [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
-> [alsa](http://npmjs.org/package/alsa) — output pcm stream to speaker in node.<br/>
-> [baudio](http://npmjs.org/package/baudio) — generate audio stream based on function in node<br/>
-> [webaudio](http://npmjs.org/package/webaudio) — generate audio stream based on function in browser
