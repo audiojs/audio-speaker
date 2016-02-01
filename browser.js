@@ -44,13 +44,12 @@ function Speaker (options) {
 		src.once('end', function () {
 			//FIXME: with no reason sometimes it does not send the data
 			//FIXME: resolve this issue, it should not be like that, write should work
-			var buf = util.shallow(self.buffer);
+			var buf = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
 
-			self.removeAllListeners();
-
-			self.offset = 0;
 			self.write(buf);
-			util.copy(buf, self.buffer);
+			self.once('tick', function () {
+				if (self.state !== 'ended') self.write(buf);
+			});
 		});
 	});
 
@@ -159,6 +158,12 @@ Speaker.prototype.initBufferMode = function () {
 			self.emit('tick');
 		}
 	}
+
+	//once source self is finished - disconnect modules
+	self.once('end', function () {
+		self.bufferNode.stop();
+		self.bufferNode.disconnect();
+	});
 
 	return self;
 }

@@ -8,7 +8,7 @@ Through.log = true;
 var test = require('tst')//.only();
 
 
-test.only('Feed audio-through', function () {
+test('Feed audio-through', function () {
 	Generator({
 		generate: function (time) {
 			return [
