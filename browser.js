@@ -2,12 +2,12 @@
  * @module audio-speaker
  */
 
-var Through = require('../audio-through');
+var Through = require('audio-through');
 var context = require('audio-context');
 var extend = require('xtend/mutable');
 var inherits = require('inherits');
 var pcm = require('pcm-util');
-var util = require('../audio-buffer-utils');
+var util = require('audio-buffer-utils');
 
 
 /**
@@ -76,6 +76,8 @@ Speaker.prototype.mode = Speaker.prototype.BUFFER_MODE;
 Speaker.prototype.initScriptMode = function () {
 	var self = this;
 
+	self.offset = 0;
+
 	//buffer source node
 	self.bufferNode = self.context.createBufferSource();
 	self.bufferNode.loop = true;
@@ -135,7 +137,7 @@ Speaker.prototype.initBufferMode = function () {
 
 	//audio buffer realtime ticked cycle
 	//FIXME: plan by context time instead of using the interval. Or ok? IDK.
-	setInterval(tick);
+	setInterval(tick, Math.floor(self.buffer.duration * 1000 / 3));
 
 	self.bufferNode.connect(self.context.destination);
 	self.bufferNode.start();
@@ -178,7 +180,7 @@ Speaker.prototype.process = function (buffer, done) {
 	//wait for played space is free
 	self.once('tick', function () {
 		//bring stream data to audio-context
-		util.copy(buffer, self.buffer, self.offset || 0);
+		util.copy(buffer, self.buffer, self.offset);
 
 		//release cb
 		done();
@@ -186,76 +188,7 @@ Speaker.prototype.process = function (buffer, done) {
 };
 
 
-
-/**
- * Read data chunk from the buffer.
- * Schedule data chunk to audio destination.
- */
-/*Speaker.prototype._write = function (chunk, encoding, callback) {
-	var self = this;
-
-	var methName = self.readMethodName;
-
-	var sampleSize = self.bitDepth / 8;
-	var frameLength = Math.floor(chunk.length / sampleSize / self.channels);
-
-	//if data buffer is full - wait till the next tick
-	if (self.data[0].length + frameLength >= self.dataLength) {
-		self.once('tick', function () {
-			self._write(chunk, encoding, callback);
-		});
-		return;
-	}
-
-	//save the data
-	var offset, value;
-	for (var i = 0; i < frameLength; i++) {
-		for (var channel = 0; channel < self.channels; channel++) {
-			offset = self.interleaved ? channel + i * self.channels : channel * self.samplesPerFrame + i;
-			value = pcm.convertSample(chunk[methName]( offset * sampleSize ), self, {float: true});
-			self.data[channel].push(value);
-		}
-	}
-
-	callback();
-}*/
-
-
-/** Schedule set of chunks */
-// Speaker.prototype._writev = function (chunks, callback) {
-// 	var self = this;
-// 	var chunk;
-// 	chunks.forEach(function (writeReq) {
-// 		var chunk = writeReq.chunk;
-// 		var chunkLen = Math.floor(chunk.length / 4);
-// 		for (var i = 0; i < chunkLen; i++) {
-// 			self.data.push(chunk.readFloatLE(i*4));
-// 		}
-// 	});
-// 	callback();
-// }
-
-
 /** Default audio context */
 Speaker.prototype.context = context;
-
-
-
-/**
- * Samples per channel for audio buffer.
- * Small sizes are dangerous as time between processor ticks
- * can be more time than the played buffer, especially due to GC.
- * If GC is noticeable - increase that.
- */
-// Speaker.prototype.bufferLength = 256 * 16;
-
-
-/**
- * Data buffer keeps all the input async data to provide realtime audiobuffer data.
- * Should be more than audio buffer size to always be in from of realtime sound.
- */
-// Speaker.prototype.dataLength = Speaker.prototype.bufferLength * 2;
-
-
 
 module.exports = Speaker;
