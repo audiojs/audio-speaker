@@ -1,7 +1,7 @@
 {
   "name": "audio-speaker",
   "version": "1.2.0",
-  "description": "Output any audio stream to speaker, browser/node",
+  "description": "Output audio stream to speaker in browser/node",
   "main": "index.js",
   "scripts": {
     "test:browser": "budo test.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/audio-lab/speaker"
+    "url": "https://github.com/audio-lab/audio-speaker"
   },
   "keywords": [
     "audio",
@@ -25,9 +25,9 @@
   "author": "Deema Yvanow <dfcreative@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/audio-lab/speaker/issues"
+    "url": "https://github.com/audio-lab/audio-speaker/issues"
   },
-  "homepage": "https://github.com/audio-lab/speaker",
+  "homepage": "https://github.com/audio-lab/audio-speaker",
   "devDependencies": {
     "audio-buffer-utils": "^2.0.0",
     "audio-generator": "^2.0.1",
