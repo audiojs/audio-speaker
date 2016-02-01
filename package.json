@@ -34,6 +34,7 @@
     "browserify": "^11.2.0",
     "component-raf": "^1.2.0",
     "pcm-util": "^2.0.2",
+    "pcm-volume": "^1.0.0",
     "tst": "^1.1.8",
     "watchify": "^3.4.0"
   },

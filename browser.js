@@ -38,17 +38,17 @@ function Speaker (options) {
 		self.initBufferMode();
 	}
 
+	//just prerender silence buffer
+	self._silence = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
 
 	//ensure to send a couple of silence-buffers if connected source ends
 	self.on('pipe', function (src) {
 		src.once('end', function () {
 			//FIXME: with no reason sometimes it does not send the data
 			//FIXME: resolve this issue, it should not be like that, write should work
-			var buf = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
-
-			self.write(buf);
+			self.write(self._silence);
 			self.once('tick', function () {
-				if (self.state !== 'ended') self.write(buf);
+				if (self.state !== 'ended') self.write(self._silence);
 			});
 		});
 	});
@@ -76,8 +76,6 @@ Speaker.prototype.mode = Speaker.prototype.BUFFER_MODE;
 Speaker.prototype.initScriptMode = function () {
 	var self = this;
 
-	self.offset = 0;
-
 	//buffer source node
 	self.bufferNode = self.context.createBufferSource();
 	self.bufferNode.loop = true;
@@ -90,7 +88,11 @@ Speaker.prototype.initScriptMode = function () {
 
 		//FIXME: if GC (I guess) is clicked, this guy may just stop generating that evt
 		//possibly there should be a promise-like thing, resetting scriptProcessor, or something... Like, N reserve scriptProcessors
-		self.emit('tick');
+		util.copy(self._readyData, self.buffer);
+		var release = self._release;
+		self._readyData = null;
+		self._release = null;
+		release();
 	});
 
 
@@ -157,7 +159,19 @@ Speaker.prototype.initBufferMode = function () {
 		if (offset != lastOffset) {
 			lastOffset = offset;
 			self.offset = ((offset + 1) % FOLD) * self.inputFormat.samplesPerFrame;
-			self.emit('tick');
+
+			//if there is a data - release it
+			if (self._readyData) {
+				util.copy(self._readyData, self.buffer, self.offset);
+				var release = self._release;
+				self._readyData = null;
+				self._release = null;
+				release();
+			}
+			//if there is a timeout but no data - fill with silence
+			else {
+				util.copy(self._silence, self.buffer, self.offset);
+			}
 		}
 	}
 
@@ -176,15 +190,8 @@ Speaker.prototype.initBufferMode = function () {
  */
 Speaker.prototype.process = function (buffer, done) {
 	var self = this;
-
-	//wait for played space is free
-	self.once('tick', function () {
-		//bring stream data to audio-context
-		util.copy(buffer, self.buffer, self.offset);
-
-		//release cb
-		done();
-	});
+	self._readyData = buffer;
+	self._release = done;
 };
 
 

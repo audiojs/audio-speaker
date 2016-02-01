@@ -5,6 +5,7 @@ var util = require('audio-buffer-utils');
 var pcm = require('pcm-util');
 var Through = require('audio-through');
 Through.log = true;
+var Volume = require('pcm-volume');
 var test = require('tst')//.only();
 
 
@@ -70,3 +71,17 @@ test('Feed custom pcm', function () {
 });
 
 test.skip('Feed random buffer size');
+
+test('Volume case', function () {
+	Generator({
+		generate: function (time) {
+			return [
+				Math.sin(Math.PI * 2 * time * 438 ) / 5,
+				Math.sin(Math.PI * 2 * time * 442 ) / 5
+			];
+		},
+		duration: 1
+	})
+	.pipe(Volume(5))
+	.pipe(Speaker());
+});
