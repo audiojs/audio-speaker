@@ -20,7 +20,10 @@ Generator(function (time) {
 	bitDepth: 16,
 	signed: true,
 	float: false,
-	interleaved: true
+	interleaved: true,
+
+	//whether to use scriptProcessor (1) or bufferSource (0) to output sound, browser-only
+	mode: 0
 }));
 ```
 

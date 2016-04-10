@@ -4,10 +4,16 @@
  * @module audio-speaker
  */
 
-var NodeSpeaker = require('speaker');
 var inherits = require('inherits');
 var extend = require('xtend/mutable');
 var Through = require('audio-through');
+
+try {
+	var NodeSpeaker = require('speaker');
+} catch (e) {
+	console.warn('`speaker` package was not found. Using `audio-sink` instead.');
+	var NodeSpeaker = require('audio-sink');
+}
 
 /**
  * Speaker is just a format wrapper for node-speaker,
