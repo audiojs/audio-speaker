@@ -46,7 +46,7 @@
     "audio-context": "^0.1.0",
     "audio-element": "^1.0.1",
     "audio-sink": "^1.0.2",
-    "audio-through": "^1.0.10",
+    "audio-through": "^2.0.0",
     "inherits": "^2.0.1",
     "pcm-util": "^2.0.1",
     "xtend": "^4.0.0"

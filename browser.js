@@ -39,7 +39,7 @@ function Speaker (options) {
 	}
 
 	//just prerender silence buffer
-	self._silence = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
+	self._silence = util.create(self.format.channels, self.format.samplesPerFrame);
 
 	//ensure to send a couple of silence-buffers if connected source ends
 	self.on('pipe', function (src) {
@@ -79,10 +79,10 @@ Speaker.prototype.initScriptMode = function () {
 	//buffer source node
 	self.bufferNode = self.context.createBufferSource();
 	self.bufferNode.loop = true;
-	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame);
+	self.bufferNode.buffer = util.create(self.format.channels, self.format.samplesPerFrame);
 	self.buffer = self.bufferNode.buffer;
 
-	self.scriptNode = self.context.createScriptProcessor(self.inputFormat.samplesPerFrame);
+	self.scriptNode = self.context.createScriptProcessor(self.format.samplesPerFrame);
 	self.scriptNode.addEventListener('audioprocess', function (e) {
 		util.copy(e.inputBuffer, e.outputBuffer);
 
@@ -124,7 +124,7 @@ Speaker.prototype.initBufferMode = function () {
 	//buffer source node
 	self.bufferNode = self.context.createBufferSource();
 	self.bufferNode.loop = true;
-	self.bufferNode.buffer = util.create(self.inputFormat.channels, self.inputFormat.samplesPerFrame * FOLD);
+	self.bufferNode.buffer = util.create(self.format.channels, self.format.samplesPerFrame * FOLD);
 	self.buffer = self.bufferNode.buffer;
 
 	//get channels data
@@ -139,7 +139,7 @@ Speaker.prototype.initBufferMode = function () {
 
 	//audio buffer realtime ticked cycle
 	//FIXME: plan by context time instead of using the interval. Or ok? IDK.
-	setInterval(tick, Math.floor(self.buffer.duration * 1000 / 3));
+	setInterval(tick, Math.floor(self.buffer.duration * 1000 / 4));
 
 	self.bufferNode.connect(self.context.destination);
 	self.bufferNode.start();
@@ -153,12 +153,12 @@ Speaker.prototype.initBufferMode = function () {
 		var offsetCount = playedCount % self.buffer.length;
 
 		//displacement within the buffer
-		var offset = Math.floor(offsetCount / self.inputFormat.samplesPerFrame);
+		var offset = Math.floor(offsetCount / self.format.samplesPerFrame);
 
 		//if offset has changed - notify processor to provide a new piece of data
 		if (offset != lastOffset) {
 			lastOffset = offset;
-			self.offset = ((offset + 1) % FOLD) * self.inputFormat.samplesPerFrame;
+			self.offset = ((offset + 1) % FOLD) * self.format.samplesPerFrame;
 
 			//if there is a data - release it
 			if (self._readyData) {

@@ -8,6 +8,19 @@ Through.log = true;
 var Volume = require('pcm-volume');
 var test = require('tst')//.only();
 
+test('Cleanness of wave', function () {
+	Through(function (buffer) {
+		var self = this;
+		util.fill(buffer, function (sample, channel, idx) {
+			return Math.sin(Math.PI * 2 * (self.count + idx) * 440 / 44100);
+		});
+
+		if (this.time > 2) return this.end();
+
+		return buffer;
+	})
+	.pipe(Speaker());
+});
 
 test('Feed audio-through', function () {
 	Generator({
