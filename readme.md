@@ -29,6 +29,7 @@ Generator(function (time) {
 
 #### Related
 
+> [web-audio-stream](https://github.com/audio-lab/web-audio-stream) — stream data to web-audio.<br/>
 > [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
 > [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
 > [audio-feeder](https://github.com/brion/audio-feeder) — cross-browser speaker for pcm data.<br/>
