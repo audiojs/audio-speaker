@@ -1,6 +1,7 @@
 //this will affect all the git repos
 git config --global core.excludesfile ~/.gitignore
 
+*.otf
 
 //update files since .ignore won't if already tracked
 git rm --cached <file>

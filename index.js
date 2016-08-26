@@ -44,6 +44,7 @@ inherits(AudioSpeaker, Through);
  * Predefined format for node-speaker
  */
 extend(AudioSpeaker.prototype, {
+	float: false,
 	interleaved: true,
 	bitDepth: 16,
 	signed: true
