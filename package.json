@@ -9,10 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/audio-lab/audio-speaker"
+    "url": "https://github.com/audiojs/audio-speaker"
   },
   "keywords": [
     "audio",
+    "audiojs",
     "pcm",
     "speaker",
     "web-audio",
@@ -25,9 +26,9 @@
   "author": "Deema Yvanow <dfcreative@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/audio-lab/audio-speaker/issues"
+    "url": "https://github.com/audiojs/audio-speaker/issues"
   },
-  "homepage": "https://github.com/audio-lab/audio-speaker",
+  "homepage": "https://github.com/audiojs/audio-speaker",
   "devDependencies": {
     "audio-buffer-utils": "^2.0.0",
     "audio-context": "^0.1.0",
