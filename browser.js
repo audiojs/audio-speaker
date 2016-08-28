@@ -1,5 +1,5 @@
 var inherits = require('inherits');
-var WAAStream = require('web-audio-stream/writable');
+var WAAStream = require('../web-audio-stream/writable');
 
 
 module.exports = Speaker;

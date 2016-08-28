@@ -8,8 +8,8 @@ var Through = require('audio-through');
 Through.log = true;
 var Volume = require('pcm-volume');
 var test = require('tst')//.only();
-// var WAASteam = require('web-audio-stream');
-// var context = require('audio-context');
+var WAASteam = require('web-audio-stream');
+var context = require('audio-context');
 
 require('insert-styles')(`
 	@font-face {
@@ -21,15 +21,16 @@ require('insert-styles')(`
 test('Cleanness of wave', function () {
 	Through(function (buffer) {
 		var self = this;
-		util.fill(buffer, function (sample, channel, idx) {
-			return Math.sin(Math.PI * 2 * (self.count + idx) * 340 / 44100);
+		util.fill(buffer, function (sample, idx, channel) {
+			return Math.sin(Math.PI * 2 * (self.count + idx) * 440 / 44100);
 		});
 
-		if (this.time > 2) return this.end();
+		if (this.time > 1) return this.end();
 
 		return buffer;
 	})
 	.pipe(Speaker());
+	// .pipe(WAASteam(context.destination));
 });
 
 test('Feed audio-through', function () {
@@ -52,7 +53,7 @@ test('Feed raw pcm', function () {
 			var abuf = util.create(2, 1024, 44100);
 
 			//EGG: swap ch & i and hear wonderful sfx
-			util.fill(abuf, function (v, ch, i) {
+			util.fill(abuf, function (v, i, ch) {
 				v = Math.sin(Math.PI * 2 * ((count + i)/44100) * (738 + ch*2) ) / 5;
 				return v;
 			});
@@ -79,7 +80,7 @@ test.skip('Feed custom pcm', function () {
 		read: function (size) {
 			var abuf = util.create(2, 1024, 44100);
 
-			util.fill(abuf, function (v, ch, i) {
+			util.fill(abuf, function (v, i, ch) {
 				return Math.sin(Math.PI * 2 * ((count + i)/44100) * (938 + ch*2) );
 			});
 

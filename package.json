@@ -32,17 +32,12 @@
   "devDependencies": {
     "audio-buffer-utils": "^3.1.2",
     "audio-context": "^0.1.0",
-    "audio-element": "^1.0.1",
     "audio-generator": "^2.0.1",
     "audio-sink": "^1.0.2",
-    "audio-through": "^2.1.1",
-    "browserify": "^13.1.0",
-    "component-raf": "^1.2.0",
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
     "tst": "^1.1.8",
-    "watchify": "^3.4.0",
     "wavefont": "^1.2.1",
     "xtend": "^4.0.0"
   },
@@ -50,6 +45,7 @@
     "speaker": "^0.3.0"
   },
   "dependencies": {
+    "audio-through": "^2.1.1",
     "inherits": "^2.0.1",
     "web-audio-stream": "^2.0.0"
   }

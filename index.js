@@ -1,7 +1,8 @@
 /**
- * Node entry.
- * Wraps node-speaker to ensure format.
  * @module audio-speaker
+ *
+ * Wraps node-speaker to ensure format.
+ *
  */
 
 var inherits = require('inherits');
