@@ -35,7 +35,7 @@
     "audio-element": "^1.0.1",
     "audio-generator": "^2.0.1",
     "audio-sink": "^1.0.2",
-    "audio-through": "^2.1.1",
+    "audio-through": "^2.1.5",
     "browserify": "^11.2.0",
     "component-raf": "^1.2.0",
     "insert-styles": "^1.2.1",
