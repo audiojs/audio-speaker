@@ -4,6 +4,7 @@
  * Wraps node-speaker to ensure format.
  *
  */
+'use strict';
 
 var inherits = require('inherits');
 var extend = require('xtend/mutable');

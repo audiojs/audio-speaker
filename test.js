@@ -1,4 +1,5 @@
-// var Speaker = require('./');
+'use strict';
+
 var Speaker = require('./');
 var Generator = require('audio-generator');
 var Readable = require('stream').Readable;
