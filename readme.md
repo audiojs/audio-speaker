@@ -16,11 +16,11 @@ Generator(function (time) {
 	//PCM input format defaults, optional.
 	channels: 2,
 	sampleRate: 44100,
-	byteOrder: 'LE',
-	bitDepth: 16,
-	signed: true,
-	float: false,
-	interleaved: true,
+	//byteOrder: 'LE',
+	//bitDepth: 16,
+	//signed: true,
+	//float: false,
+	//interleaved: true,
 
 	//whether to use scriptProcessor (1) or bufferSource (0) to output sound, browser-only
 	mode: 0
