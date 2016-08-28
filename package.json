@@ -33,7 +33,6 @@
     "audio-buffer-utils": "^3.1.2",
     "audio-context": "^0.1.0",
     "audio-generator": "^2.0.1",
-    "audio-sink": "^1.0.2",
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
@@ -42,6 +41,7 @@
     "xtend": "^4.0.0"
   },
   "optionalDependencies": {
+    "audio-sink": "^1.0.2",
     "speaker": "^0.3.0"
   },
   "dependencies": {
