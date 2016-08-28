@@ -47,6 +47,6 @@
   "dependencies": {
     "audio-through": "^2.1.1",
     "inherits": "^2.0.1",
-    "web-audio-stream": "^2.0.0"
+    "web-audio-stream": "^2.0.3"
   }
 }
