@@ -4,6 +4,8 @@
   "description": "Output audio stream to speaker in browser/node",
   "main": "index.js",
   "scripts": {
+    "preversion": "npm run lint && npm run test",
+    "lint": "eslint *.js --ignore-pattern test*",
     "test:browser": "budo test.js",
     "test": "node test"
   },
@@ -33,6 +35,7 @@
     "audio-buffer-utils": "^3.1.2",
     "audio-context": "^0.1.0",
     "audio-generator": "^2.0.1",
+    "eslint": "^3.4.0",
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",

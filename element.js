@@ -10,6 +10,8 @@
  *
  * @module  audio-speaker/element
  */
+'use strict';
+
 var Speaker = require('audio-speaker');
 var AudioElement = require('audio-element');
 

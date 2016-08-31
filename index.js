@@ -10,11 +10,12 @@ var inherits = require('inherits');
 var extend = require('xtend/mutable');
 var Through = require('audio-through');
 
+var NodeSpeaker;
 try {
-	var NodeSpeaker = require('speaker');
+	NodeSpeaker = require('speaker');
 } catch (e) {
 	console.warn('`speaker` package was not found. Using `audio-sink` instead.');
-	var NodeSpeaker = require('audio-sink');
+	NodeSpeaker = require('audio-sink');
 }
 
 /**

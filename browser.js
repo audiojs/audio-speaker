@@ -1,3 +1,7 @@
+/** @module  audio-speaker/browser */
+
+'use strict';
+
 var inherits = require('inherits');
 var WAAStream = require('../web-audio-stream/writable');
 
