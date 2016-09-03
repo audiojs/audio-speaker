@@ -34,7 +34,7 @@
   "devDependencies": {
     "audio-buffer-utils": "^3.1.2",
     "audio-context": "^0.1.0",
-    "audio-generator": "^2.0.1",
+    "audio-generator": "^2.0.9",
     "eslint": "^3.4.0",
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
