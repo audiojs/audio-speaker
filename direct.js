@@ -74,7 +74,7 @@ try {
 		let samplesPerFrame = opts.samplesPerFrame || 1024;
 
 		let sink = Sink((data, cb) => {
-			if (ended) return cb(true);
+			if (ended) return cb && cb(true);
 			setTimeout(cb, samplesPerFrame / sampleRate);
 		});
 
