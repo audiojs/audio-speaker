@@ -8,6 +8,7 @@
 
 const pcm = require('pcm-util');
 const isAudioBuffer = require('is-audio-buffer');
+const extend = require('xtend/mutable');
 
 const format = {
 	float: false,
@@ -28,13 +29,11 @@ try {
 	 * @constructor
 	 */
 	module.exports = function (opts) {
-		opts = opts || {};
+		opts = extend({}, format, opts);
 
 		//create node-speaker with default options - the most cross-platform case
 		let speaker = new NodeSpeaker(opts);
 		let ended = false;
-
-		let _cb;
 
 		//FIXME: sometimes this lil fckr does not end stream hanging tests
 		write.end = () => {
@@ -48,8 +47,6 @@ try {
 				ended = true;
 				return;
 			}
-
-			_cb = cb;
 
 			let buf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, format) : chunk;
 			speaker.write(buf, () => {

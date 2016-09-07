@@ -11,8 +11,10 @@ Through.log = true;
 var Volume = require('pcm-volume');
 var test = require('tst')//.only();
 var SpeakerWriter = require('./direct');
-// var WAASteam = require('web-audio-stream');
-// var context = require('audio-context');
+var pull = require('pull-stream');
+var PullSpeaker = require('./pull');
+var pullGenerator = require('audio-generator/pull');
+
 
 require('insert-styles')(`
 	@font-face {
@@ -37,6 +39,20 @@ test('Pure function', function (done) {
 		write.end();
 		done();
 	}, 200);
+});
+
+test('Pull stream', function (done) {
+	let out = PullSpeaker();
+
+	pull(
+		pullGenerator(time => 2 * time * 440 - 1, {frequency: 440}),
+		out
+	);
+
+	setTimeout(() => {
+		out.abort();
+		done();
+	}, 500);
 });
 
 test('Cleanness of wave', function () {
