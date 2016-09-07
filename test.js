@@ -1,7 +1,8 @@
 'use strict';
 
-var Speaker = require('./');
-var Generator = require('audio-generator');
+var Speaker = require('./stream');
+var Generator = require('audio-generator/stream');
+var Generate = require('audio-generator/index');
 var Readable = require('stream').Readable;
 var util = require('audio-buffer-utils');
 var pcm = require('pcm-util');
@@ -9,8 +10,11 @@ var Through = require('audio-through');
 Through.log = true;
 var Volume = require('pcm-volume');
 var test = require('tst')//.only();
-// var WAASteam = require('web-audio-stream');
-// var context = require('audio-context');
+var SpeakerWriter = require('./direct');
+var pull = require('pull-stream');
+var PullSpeaker = require('./pull');
+var pullGenerator = require('audio-generator/pull');
+
 
 require('insert-styles')(`
 	@font-face {
@@ -18,6 +22,38 @@ require('insert-styles')(`
 		src: url(./wavefont.otf) format("opentype");
 	}
 `);
+
+test('Pure function', function (done) {
+	let generate = Generate(t => {
+		return Math.sin(t * Math.PI * 2 * 440);
+	}, 1);
+
+	let write = SpeakerWriter();
+
+	(function loop (err, buf) {
+		if (err) return write(null);
+		write(generate(buf), loop)
+	})();
+
+	setTimeout(() => {
+		write.end();
+		done();
+	}, 200);
+});
+
+test('Pull stream', function (done) {
+	let out = PullSpeaker();
+
+	pull(
+		pullGenerator(time => 2 * time * 440 - 1, {frequency: 440}),
+		out
+	);
+
+	setTimeout(() => {
+		out.abort();
+		done();
+	}, 500);
+});
 
 test('Cleanness of wave', function () {
 	Through(function (buffer) {

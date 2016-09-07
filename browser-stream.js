@@ -3,7 +3,8 @@
 'use strict';
 
 var inherits = require('inherits');
-var WAAStream = require('../web-audio-stream/writable');
+var WAAStream = require('web-audio-stream/writable');
+var context = require('audio-context');
 
 
 module.exports = Speaker;
@@ -15,9 +16,7 @@ inherits(Speaker, WAAStream);
 function Speaker(options) {
 	if (!(this instanceof Speaker)) return new Speaker(options);
 
-	WAAStream.call(this, options);
+	let ctx = options && options.context || context;
 
-	this.connect(this.context.destination);
+	WAAStream.call(this, ctx.destination, options);
 }
-
-Speaker.prototype.mode = WAAStream.BUFFER_MODE;

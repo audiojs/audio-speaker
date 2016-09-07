@@ -5,9 +5,11 @@ Output audio stream to speaker in node or browser.
 [![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
 
 
+### Use as a stream
+
 ```js
-var Speaker = require('audio-speaker');
-var Generator = require('audio-generator');
+var Speaker = require('audio-speaker/stream');
+var Generator = require('audio-generator/stream');
 
 Generator(function (time) {
 	//panned unisson effect
@@ -16,17 +18,41 @@ Generator(function (time) {
 })
 .pipe(Speaker({
 	//PCM input format defaults, optional.
-	channels: 2,
-	sampleRate: 44100,
+	//channels: 2,
+	//sampleRate: 44100,
 	//byteOrder: 'LE',
 	//bitDepth: 16,
 	//signed: true,
 	//float: false,
 	//interleaved: true,
-
-	//whether to use scriptProcessor (1) or bufferSource (0) to output sound, browser-only
-	mode: 0
 }));
+```
+
+### Use as a pull-stream
+
+```js
+const pull = require('pull-stream/pull');
+const speaker = require('audio-speaker/pull');
+const osc = require('audio-oscillator/pull');
+
+pull(osc({frequency: 440}), speaker());
+```
+
+### Use directly
+
+Speaker is [async-sink](https://github.com/audiojs/contributing/wiki/Streams-convention) with `fn(data, cb)` notation.
+
+```js
+const createSpeaker = require('audio-speaker');
+const createGenerator = require('audio-generator');
+
+let output = createSpeaker();
+let generate = createGenerator(t => Math.sin(t * Math.PI * 2 * 440));
+
+(function loop (err, buf) {
+	let buffer = generate();
+	output(buffer, loop);
+})();
 ```
 
 #### Related
