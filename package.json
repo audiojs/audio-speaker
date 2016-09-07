@@ -23,9 +23,8 @@
     "sink"
   ],
   "browser": {
-    "./index.js": "./browser.js",
-    "./stream.js": "./browser-stream.js",
-    "./pull.js": "./browser-pull.js"
+    "./direct.js": "./browser-direct.js",
+    "./stream.js": "./browser-stream.js"
   },
   "author": "Dima Yv <dfcreative@gmail.com>",
   "license": "MIT",
