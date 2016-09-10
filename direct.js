@@ -18,69 +18,80 @@ const format = {
 };
 
 
+let NodeSpeaker, Sink;
+
 try {
-	const NodeSpeaker = require('speaker');
-
-	/**
-	 * Speaker is just a format wrapper for node-speaker,
-	 * as node-speaker doesn’t support any input format in some platforms, like windows.
-	 * So we need to force the most safe format.
-	 *
-	 * @constructor
-	 */
-	module.exports = function (opts) {
-		opts = extend({}, format, opts);
-
-		//create node-speaker with default options - the most cross-platform case
-		let speaker = new NodeSpeaker(opts);
-		let ended = false;
-
-		//FIXME: sometimes this lil fckr does not end stream hanging tests
-		write.end = () => {
-			ended = true;
-		}
-
-		return write;
-
-		function write (chunk, cb) {
-			if (chunk == null || chunk === true || ended) {
-				ended = true;
-				return;
-			}
-
-			let buf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, format) : chunk;
-			speaker.write(buf, () => {
-				if (ended) {
-					speaker.close();
-					speaker.end();
-					return cb && cb(true);
-				}
-				cb(null, chunk);
-			});
-		}
-	}
-} catch (e) {
+	NodeSpeaker = require('speaker');
+}
+catch (e) {
 	console.warn('`speaker` package was not found. Using `audio-sink` instead.');
-	const Sink = require('audio-sink/direct');
+	Sink = require('audio-sink/direct');
+}
 
-	module.exports = function (opts) {
-		opts = opts || {};
-		let ended = false;
 
-		let sampleRate = opts.sampleRate || 44100;
-		let samplesPerFrame = opts.samplesPerFrame || 1024;
+module.exports = function (opts) {
+	opts = extend({}, format, opts);
 
-		let sink = Sink((data, cb) => {
-			if (ended) return cb && cb(true);
-			setTimeout(cb, samplesPerFrame / sampleRate);
-		});
+	return opts.sink || !NodeSpeaker ? createSink(opts) : createSpeaker(opts);
+}
 
-		sink.end = () => {
+
+/**
+ * Speaker is just a format wrapper for node-speaker,
+ * as node-speaker doesn’t support any input format in some platforms, like windows.
+ * So we need to force the most safe format.
+ *
+ * @constructor
+ */
+function createSpeaker (opts) {
+	//create node-speaker with default options - the most cross-platform case
+	let speaker = new NodeSpeaker(opts);
+	let ended = false;
+
+	//FIXME: sometimes this lil fckr does not end stream hanging tests
+	write.end = () => {
+		ended = true;
+		write(true);
+	}
+
+	return write;
+
+	function write (chunk, cb) {
+		if (chunk == null || chunk === true || ended) {
 			ended = true;
+			cb && cb(true);
+			return;
 		}
 
-		return sink;
+		let buf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, format) : chunk;
+		speaker.write(buf, () => {
+			if (ended) {
+				speaker.close();
+				speaker.end();
+				return cb && cb(true);
+			}
+			cb(null, chunk);
+		});
 	}
+}
+
+function createSink (opts) {
+	let ended = false;
+
+	let sampleRate = opts.sampleRate || 44100;
+	let samplesPerFrame = opts.samplesPerFrame || 1024;
+
+	let sink = Sink((data, cb) => {
+		if (ended || data == null || data == true) return cb && cb(true);
+		setTimeout(cb, samplesPerFrame / sampleRate);
+	});
+
+	sink.end = () => {
+		ended = true;
+		sink(true);
+	}
+
+	return sink;
 }
 
 

@@ -36,7 +36,7 @@ test('Pure function', function (done) {
 	})();
 
 	setTimeout(() => {
-		write.end();
+		write(null);
 		done();
 	}, 200);
 });
