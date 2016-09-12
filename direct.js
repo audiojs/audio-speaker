@@ -70,7 +70,7 @@ function createSpeaker (opts) {
 				speaker.end();
 				return cb && cb(true);
 			}
-			cb(null, chunk);
+			cb && cb(null, chunk);
 		});
 	}
 }
