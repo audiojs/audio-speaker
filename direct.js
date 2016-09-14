@@ -83,7 +83,7 @@ function createSink (opts) {
 
 	let sink = Sink((data, cb) => {
 		if (ended || data == null || data == true) return cb && cb(true);
-		setTimeout(cb, samplesPerFrame / sampleRate);
+		cb && setTimeout(cb, samplesPerFrame / sampleRate);
 	});
 
 	sink.end = () => {
