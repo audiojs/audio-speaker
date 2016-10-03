@@ -15,7 +15,6 @@ git rm --cached <file>
 Makefile
 Makefile.in
 configure
-config.h
 config.status
 config.h.in
 config.log
