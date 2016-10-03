@@ -1,0 +1,3 @@
+[submodule "src/mpg123"]
+	path = src/mpg123
+	url = https://github.com/audiojs/mpg123

@@ -6,6 +6,33 @@ git config --global core.excludesfile ~/.gitignore
 //update files since .ignore won't if already tracked
 git rm --cached <file>
 
+# Node GYP #
+############
+/build
+
+# Binding #
+###########
+Makefile
+Makefile.in
+configure
+config.h
+config.status
+config.h.in
+config.log
+config.cache
+autom4te.cache
+aclocal.m4
+libmpg123.pc
+libout123.pc
+libmpg123.spec
+mpg123.spec
+unix2dos
+unix2dos.c
+/libtool
+/.Tpo
+/.deps
+/.libs
+
 # Compiled source #
 ###################
 *.com
@@ -91,6 +118,7 @@ bower_components
 .CVS
 intermediate
 publish
+.vscode
 .idea
 .graphics
 _test
@@ -104,5 +132,5 @@ tmp
 .netrwhist
 
 bundle.*
-build
+
 _demo

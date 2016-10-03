@@ -1,63 +1,22 @@
-#audio-speaker [![Build Status](https://travis-ci.org/audiojs/audio-speaker.svg?branch=master)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
+#audio-speaker [![Build Status](https://travis-ci.org/audiojs/audio-speaker.svg?branch=master)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-Output audio stream to speaker in node or browser.
+Output audio stream natively in node or through Web Audio in the browser.
 
-[![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
+More documentation coming soon.
 
+## Credits
 
-### Use as a stream
-
-```js
-var Speaker = require('audio-speaker/stream');
-var Generator = require('audio-generator/stream');
-
-Generator(function (time) {
-	//panned unisson effect
-	var τ = Math.PI * 2;
-	return [Math.sin(τ * time * 441), Math.sin(τ * time * 439)];
-})
-.pipe(Speaker({
-	//PCM input format defaults, optional.
-	//channels: 2,
-	//sampleRate: 44100,
-	//byteOrder: 'LE',
-	//bitDepth: 16,
-	//signed: true,
-	//float: false,
-	//interleaved: true,
-}));
-```
-
-### Use as a pull-stream
-
-```js
-const pull = require('pull-stream/pull');
-const speaker = require('audio-speaker/pull');
-const osc = require('audio-oscillator/pull');
-
-pull(osc({frequency: 440}), speaker());
-```
-
-### Use directly
-
-Speaker is [async-sink](https://github.com/audiojs/contributing/wiki/Streams-convention) with `fn(data, cb)` notation.
-
-```js
-const createSpeaker = require('audio-speaker');
-const createGenerator = require('audio-generator');
-
-let output = createSpeaker();
-let generate = createGenerator(t => Math.sin(t * Math.PI * 2 * 440));
-
-(function loop (err, buf) {
-	let buffer = generate();
-	output(buffer, loop);
-})();
-```
+| ![connor][connor-avatar]      |
+| :---------------------------: |
+| [Connor Hartley][connor-link] |
 
 #### Related
 
+> [mpg123](https://github.com/audiojs/mpg123) - modifications to mpg123 to suit audio-speaker.<br/>
 > [web-audio-stream](https://github.com/audiojs/web-audio-stream) — stream data to web-audio.<br/>
 > [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
 > [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
 > [audio-feeder](https://github.com/brion/audio-feeder) — cross-browser speaker for pcm data.<br/>
+
+  [connor-avatar]: https://avatars0.githubusercontent.com/u/12867785?v=3&s=125
+  [connor-link]: https://github.com/connorhartley

@@ -1,59 +1,32 @@
 {
   "name": "audio-speaker",
-  "version": "1.4.3",
-  "description": "Output audio data to speaker in browser/node",
-  "main": "stream.js",
+  "version": "2.0.0",
+  "description": "Output PCM data to a device or library.",
+  "main": "lib/index.js",
   "scripts": {
-    "preversion": "npm run lint && npm run test",
-    "lint": "eslint *.js --ignore-pattern test*",
-    "test:browser": "budo test.js",
-    "test": "node test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/audiojs/audio-speaker"
+    "url": "git+https://github.com/audiojs/out.git"
   },
   "keywords": [
+    "PCM",
+    "output",
     "audio",
     "audiojs",
-    "pcm",
-    "speaker",
-    "web-audio",
-    "sound",
-    "sink"
+    "binding",
+    "native"
   ],
-  "browser": {
-    "./direct.js": "./browser-direct.js",
-    "./stream.js": "./browser-stream.js"
-  },
-  "author": "Dima Yv <dfcreative@gmail.com>",
+  "author": "Connor Hartley (https://github.com/connorhartley)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/audiojs/audio-speaker/issues"
+    "url": "https://github.com/audiojs/out/issues"
   },
-  "homepage": "https://github.com/audiojs/audio-speaker",
-  "devDependencies": {
-    "audio-buffer-utils": "^3.1.2",
-    "audio-context": "^0.1.0",
-    "audio-generator": "^2.0.1",
-    "eslint": "^3.4.0",
-    "insert-styles": "^1.2.1",
-    "pcm-util": "^2.0.2",
-    "pcm-volume": "^1.0.0",
-    "tst": "^1.1.8",
-    "wavefont": "^1.2.1"
-  },
-  "optionalDependencies": {
-    "audio-sink": "^1.0.2",
-    "speaker": "^0.3.0"
-  },
+  "homepage": "https://github.com/audiojs/out#readme",
   "dependencies": {
-    "audio-through": "^2.1.1",
-    "inherits": "^2.0.1",
-    "is-audio-buffer": "^1.0.1",
-    "pcm-util": "^2.0.3",
-    "pull-stream": "^3.4.5",
-    "web-audio-stream": "^2.1.2",
-    "xtend": "^4.0.1"
+    "bindings": "^1.2.1",
+    "debug": "^2.2.0",
+    "nan": "2.2.0"
   }
 }
