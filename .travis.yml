@@ -11,6 +11,7 @@ addons:
     packages:
       - libgnome-keyring-dev
       - g++-4.8
+      - libasound2-dev
     sources:
       - ubuntu-toolchain-r-test
 env:
