@@ -20,6 +20,10 @@ install:
   - npm install -g npm
   - npm install -g node-gyp
   - npm install
+script:
+  - node -v
+  - npm -v
+  - node-gyp rebuild
 matrix:
   fast_finish: true
   allow_failures:
