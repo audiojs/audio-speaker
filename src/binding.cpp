@@ -23,20 +23,28 @@ namespace {
     NAN_METHOD(create) {
         Nan::EscapableHandleScope scope;
 
+        int value = 0;
+
         out123_handle *ao = out123_new();
 
         if(!ao) {
             fprintf(stderr, "Failed to initialize output handle.");
             out123_del(ao);
+            value = 0;
         } else if(out123_open(ao, NULL, NULL) != OUT123_OK) {
             fprintf(stderr, "Failed to open output: %s", out123_strerror(ao));
             out123_del(ao);
+            value = 0;
+        } else {
+          value = 1;
         }
+
+        result_callback(new Nan::Callback(info[4].As<Function>()), value);
 
         info.GetReturnValue().Set(scope.Escape(WrapPointer(&ao, static_cast<uint32_t>(sizeof(&ao)))));
     }
 
-    NAN_METHOD(start) {
+    NAN_METHOD(open) {
         Nan::HandleScope scope;
 
         out123_handle *ao = UnwrapPointer<out123_handle *>(info[0]);
@@ -46,7 +54,7 @@ namespace {
         int encoding = info[3]->Int32Value();
 
         int value = 0;
-        
+
         if(out123_start(ao, rate, channels, encoding) && !ao) {
             fprintf(stderr, "Failed to start output: %s", out123_strerror(ao));
             out123_del(ao);
@@ -83,7 +91,7 @@ namespace {
 
     NAN_METHOD(flush) {
         Nan::HandleScope scope;
-        
+
         out123_handle *ao = UnwrapPointer<out123_handle *>(info[0]);
 
         int value = 0;
@@ -186,7 +194,7 @@ namespace {
             CONST_INT(MPG123_ENC_UNSIGNED_32);
 
         Nan::SetMethod(target, "create", create);
-        Nan::SetMethod(target, "start", start);
+        Nan::SetMethod(target, "open", open);
         Nan::SetMethod(target, "write", write);
         Nan::SetMethod(target, "flush", flush);
         Nan::SetMethod(target, "close", close);
