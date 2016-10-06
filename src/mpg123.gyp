@@ -1,6 +1,17 @@
 {
     'variables': {
-        'target_arch%': 'ia32'
+        'target_arch%': 'ia32',
+        'conditions': [
+            ['OS=="mac"', {
+                'mpg123_module%': 'coreaudio'
+            }],
+            ['OS=="win"', {
+                'mpg123_module%': 'win32'
+            }],
+            ['OS=="linux"', {
+                'mpg123_module%': 'alsa'
+            }]
+        ]
     },
     'target_defaults': {
         'configurations': {
@@ -70,49 +81,72 @@
         {
             'target_name': 'compat',
             'type': 'static_library',
-            'include_dirs': [
-                'util',
-                'mpg123/src',
-                'mpg123/src/compat',
-                'mpg123/src/libmpg123',
-                'config/<(OS)/<(target_arch)'
-            ],
             'defines': [
                 'PIC',
                 'NOXFERMEM',
                 'HAVE_CONFIG_H'
             ],
-            'direct_dependent_settings': {
-                'include_dirs': [
-                    'util',
-                    'mpg123/src',
-                    'mpg123/src/compat',
-                    'mpg123/src/libmpg123',
-                    'config/<(OS)/<(target_arch)'
-                ]
-            },
             'sources': [
                 'mpg123/src/compat/compat.c',
                 'mpg123/src/compat/compat_str.c'
-            ]
+            ],
+            'conditions': [
+                ['mpg123_module=="coreaudio"', {
+                    'direct_dependent_settings': {
+                        'include_dirs': [
+                            'mpg123/src',
+                            'mpg123/src/compat',
+                            'mpg123/src/libmpg123',
+                            'config/<(OS)/<(target_arch)'
+                        ]
+                    },
+                    'include_dirs': [
+                        'mpg123/src',
+                        'mpg123/src/compat',
+                        'mpg123/src/libmpg123',
+                        'config/<(OS)/<(target_arch)'
+                    ],
+                }],
+                ['mpg123_module=="win32"', {
+                    'direct_dependent_settings': {
+                        'include_dirs': [
+                            'util',
+                            'mpg123/src',
+                            'mpg123/src/compat',
+                            'mpg123/src/libmpg123',
+                            'config/<(OS)/<(target_arch)'
+                        ]
+                    },
+                    'include_dirs': [
+                        'util',
+                        'mpg123/src',
+                        'mpg123/src/compat',
+                        'mpg123/src/libmpg123',
+                        'config/<(OS)/<(target_arch)'
+                    ],
+                }],
+                ['mpg123_module=="alsa"', {
+                    'direct_dependent_settings': {
+                        'include_dirs': [
+                            'mpg123/src',
+                            'mpg123/src/compat',
+                            'mpg123/src/libmpg123',
+                            'config/<(OS)/<(target_arch)'
+                        ]
+                    },
+                    'include_dirs': [
+                        'mpg123/src',
+                        'mpg123/src/compat',
+                        'mpg123/src/libmpg123',
+                        'config/<(OS)/<(target_arch)'
+                    ],
+                }]
+            ],
         },
         {
             'target_name': 'module',
             'type': 'static_library',
             'dependencies': ['compat', 'out123' ],
-            'variables': {
-                'conditions': [
-                    ['OS=="mac"', {
-                        'mpg123_module%': 'coreaudio'
-                    }],
-                    ['OS=="win"', {
-                        'mpg123_module%': 'win32'
-                    }],
-                    ['OS=="linux"', {
-                        'mpg123_module%': 'alsa'
-                    }]
-                ]
-            },
             'include_dirs': [
                 'mpg123/src/libout123/modules',
                 'config/<(OS)/<(target_arch)'
