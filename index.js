@@ -4,33 +4,32 @@ var debug = require('debug')('speaker')
 
 var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
 
-module.exports = exports = Speaker
+module.exports = Speaker
 
-function Speaker () {
-  return function _create (opts) {
+function Speaker (opts) {
+  return function _create () {
     debug('_create()')
-    if (this.handler) {
+    if (opts.handler) {
       throw new Error('_create() was called more than once. Only one handler should exist')
     }
 
-    this.samplesPerFrame = 1024
-    this._closed = false;
+    opts._closed = false;
 
-    this._format(opts)
+    _validate(opts)
 
-    var format = exports.getFormat(this);
+    var format = exports.getFormat(opts);
     if (format === null) {
       throw new Error('Invalid format options')
     }
 
-    this.blockAlign = this.bitDepth / 8 * this.channels
+    opts.blockAlign = opts.bitDepth / 8 * opts.channels
 
-    this.handler = binding.create()
+    opts.handler = binding.create()
 
-    if(this.handler !== null) {
+    if (opts.handler !== null) {
       debug('_start(%o)', Object.values(opts))
-      binding.open(this.handler, this.sampleRate, this.channels, format, function (success) {
-        if(success != 1) {
+      binding.open(opts.handler, opts.sampleRate, opts.channels, format, function (success) {
+        if (success != 1) {
           throw new Error('Could not start the audio output with these properties')
         } else {
           debug('Created and started handler successfully')
@@ -39,61 +38,58 @@ function Speaker () {
     }
   }
 
-  function _format(opts) {
+  function _validate (opts) {
     debug('Format: Setting options - %o', Object.keys(opts))
     if (opts.channels !== null) {
       debug('Format: Setting %o - %o', 'channels', opts.channels)
-      this.channels = opts.channels
     } else {
       debug('Format: Setting %o - %o', 'channels', 2)
-      this.channels = 2
+      opts.channels = 2
     }
     if (opts.bitDepth !== null) {
       debug('Format: Setting %o - %o', 'bitDepth', opts.bitDepth)
-      this.bitDepth = opts.bitDepth
     } else {
       debug('Format: Setting %o - %o', 'bitDepth', opts.float ? 32 : 16)
-      this.bitDepth = opts.float ? 32 : 16
+      opts.bitDepth = opts.float ? 32 : 16
     }
     if (opts.sampleRate !== null) {
       debug('Format: Setting %o - %o', 'sampleRate', opts.sampleRate)
-      this.sampleRate = opts.sampleRate
     } else {
       debug('Format: Setting %o - %o', 'sampleRate', 44100)
-      this.sampleRate = 44100
+      opts.sampleRate = 44100
     }
     if (opts.signed !== null) {
       debug('Format: Setting %o - %o', 'signed', opts.signed)
-      this.signed = opts.signed
     } else {
       debug('Format: Setting %o - %o', 'signed', opts.bitDepth != 8)
-      this.signed = this.bitDepth != 8
-    }
-    if (opts.float !== null) {
-      debug('Format: Setting %o - %o', 'float', opts.float)
-      this.float = opts.float
+      opts.signed = opts.bitDepth != 8
     }
     if (opts.samplesPerFrame !== null) {
       debug('Format: Setting %o - %o', 'samplesPerFrame', opts.samplesPerFrame)
-      this.samplesPerFrame = opts.samplesPerFrame
+    } else {
+      debug('Format: Settings &o - %o', 'samplesPerFrame', 1024)
+      opts.samplesPerFrame = 1024
     }
-    this.endianess = endianess;
+    if (opts.float !== null) {
+      debug('Format: Setting %o - %o', 'float', opts.float)
+    }
+    opts.endianess = endianess;
     debug('Format: Settings applied')
   }
 
-  function write (enc, buf, callback) {
+  function write (buf, callback) {
 
   }
 
   function function end (flush, callback) {
     debug('end(%o)', flush)
-    if (this._closed) return debug('_end() was called more than once. Already ended')
+    if (opts._closed) return debug('_end() was called more than once. Already ended')
 
-    if (this.handler) {
+    if (opts.handler) {
       if (flush) {
         debug('Flushing the audio output')
-        binding.flush(this.handler, function (success) {
-          if(success != 1) {
+        binding.flush(opts.handler, function (success) {
+          if (success != 1) {
             debug('Could not flush the audio output')
           } else {
             return close(callback)
@@ -108,13 +104,13 @@ function Speaker () {
 
     function close (callback) {
       debug('close()')
-      binding.close(this.handler, callback)
-      this.handler = null
+      binding.close(opts.handler, callback)
+      opts.handler = null
     }
   }
 }
 
-exports.getFormat = function getFormat (format) {
+Speaker.getFormat = function getFormat (format) {
   var f = null;
   if (format.bitDepth == 32 && format.float && format.signed) {
     f = binding.MPG123_ENC_FLOAT_32;
