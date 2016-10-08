@@ -1,4 +1,5 @@
 var os = require('os')
+var objectAssign = require('object-assign')
 var binding = require('bindings')('binding')
 var debug = require('debug')('speaker')
 
@@ -7,88 +8,90 @@ var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
 module.exports = Speaker
 
 function Speaker (opts) {
-  return function _create () {
-    debug('_create()')
-    if (opts.handler) {
-      throw new Error('_create() was called more than once. Only one handler should exist')
-    }
+  debug('Speaker()')
+  var options = {}
 
-    opts._closed = false;
+  objectAssign(options, opts)
 
-    _validate(opts)
-
-    var format = exports.getFormat(opts);
-    if (format === null) {
-      throw new Error('Invalid format options')
-    }
-
-    opts.blockAlign = opts.bitDepth / 8 * opts.channels
-
-    opts.handler = binding.create()
-
-    if (opts.handler !== null) {
-      debug('_start(%o)', Object.values(opts))
-      binding.open(opts.handler, opts.sampleRate, opts.channels, format, function (success) {
-        if (success != 1) {
-          throw new Error('Could not start the audio output with these properties')
-        } else {
-          debug('Created and started handler successfully')
-        }
-      })
-    }
+  if (options.handler) {
+    throw new Error('_create() was called more than once. Only one handler should exist')
   }
 
-  function _validate (opts) {
-    debug('Format: Setting options - %o', Object.keys(opts))
-    if (opts.channels !== null) {
-      debug('Format: Setting %o - %o', 'channels', opts.channels)
+  options._closed = false;
+
+  _validate(options)
+
+  var format = exports.getFormat(options);
+  if (format === null) {
+    throw new Error('Invalid format options')
+  }
+
+  options.blockAlign = options.bitDepth / 8 * options.channels
+
+  options.handler = binding.create()
+
+  if (options.handler !== null) {
+    debug('_start(%o)', Object.values(options))
+    binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
+      if (success != 1) {
+        throw new Error('Could not start the audio output with these properties')
+      } else {
+        debug('Created and started handler successfully')
+      }
+    })
+  }
+
+  return function write (buffer, callback) {
+    debug('write() (%o bytes)', buffer.length)
+  }
+
+  function _validate (options) {
+    debug('Format: Setting options - %o', Object.keys(options))
+    if (options.channels !== null) {
+      debug('Format: Setting %o - %o', 'channels', options.channels)
     } else {
       debug('Format: Setting %o - %o', 'channels', 2)
-      opts.channels = 2
+      options.channels = 2
     }
-    if (opts.bitDepth !== null) {
-      debug('Format: Setting %o - %o', 'bitDepth', opts.bitDepth)
+    if (options.bitDepth !== null) {
+      debug('Format: Setting %o - %o', 'bitDepth', options.bitDepth)
     } else {
-      debug('Format: Setting %o - %o', 'bitDepth', opts.float ? 32 : 16)
-      opts.bitDepth = opts.float ? 32 : 16
+      debug('Format: Setting %o - %o', 'bitDepth', options.float ? 32 : 16)
+      options.bitDepth = options.float ? 32 : 16
     }
-    if (opts.sampleRate !== null) {
-      debug('Format: Setting %o - %o', 'sampleRate', opts.sampleRate)
+    if (options.sampleRate !== null) {
+      debug('Format: Setting %o - %o', 'sampleRate', options.sampleRate)
     } else {
       debug('Format: Setting %o - %o', 'sampleRate', 44100)
-      opts.sampleRate = 44100
+      options.sampleRate = 44100
     }
-    if (opts.signed !== null) {
-      debug('Format: Setting %o - %o', 'signed', opts.signed)
+    if (options.signed !== null) {
+      debug('Format: Setting %o - %o', 'signed', options.signed)
     } else {
-      debug('Format: Setting %o - %o', 'signed', opts.bitDepth != 8)
-      opts.signed = opts.bitDepth != 8
+      debug('Format: Setting %o - %o', 'signed', options.bitDepth != 8)
+      options.signed = options.bitDepth != 8
     }
-    if (opts.samplesPerFrame !== null) {
-      debug('Format: Setting %o - %o', 'samplesPerFrame', opts.samplesPerFrame)
+    if (options.samplesPerFrame !== null) {
+      debug('Format: Setting %o - %o', 'samplesPerFrame', options.samplesPerFrame)
     } else {
       debug('Format: Settings &o - %o', 'samplesPerFrame', 1024)
-      opts.samplesPerFrame = 1024
+      options.samplesPerFrame = 1024
     }
-    if (opts.float !== null) {
-      debug('Format: Setting %o - %o', 'float', opts.float)
+    if (options.float !== null) {
+      debug('Format: Setting %o - %o', 'float', options.float)
     }
-    opts.endianess = endianess;
+    options.endianess = endianess;
     debug('Format: Settings applied')
-  }
-
-  function write (buf, callback) {
-
   }
 
   function function end (flush, callback) {
     debug('end(%o)', flush)
-    if (opts._closed) return debug('_end() was called more than once. Already ended')
+    if (options._closed) return debug('_end() was called more than once. Already ended')
 
-    if (opts.handler) {
+    if (options.handler) {
       if (flush) {
         debug('Flushing the audio output')
-        binding.flush(opts.handler, function (success) {
+        binding.flush(options.handler, function (success) {
           if (success != 1) {
             debug('Could not flush the audio output')
           } else {
@@ -104,8 +107,8 @@ function Speaker (opts) {
 
     function close (callback) {
       debug('close()')
-      binding.close(opts.handler, callback)
-      opts.handler = null
+      binding.close(options.handler, callback)
+      options.handler = null
     }
   }
 }
