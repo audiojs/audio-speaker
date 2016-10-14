@@ -10,8 +10,8 @@ namespace {
         uv_work_t req;
         out123_handle *ao;
         unsigned char *buffer;
-        int length;
-        int done;
+        int len;
+        int written;
         Nan::Callback *callback;
     };
 
