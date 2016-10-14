@@ -1,6 +1,8 @@
 var os = require('os')
 var objectAssign = require('object-assign')
 var binding = require('bindings')('binding')
+var pcm = require('pcm-util')
+var isAudioBuffer = require('is-audio-buffer')
 var debug = require('debug')('speaker')
 
 var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
@@ -28,6 +30,8 @@ function Speaker (opts) {
 
   options.blockAlign = options.bitDepth / 8 * options.channels
 
+  options.chunkSize = options.blockAlign * options.samplesPerFrame
+
   options.handler = binding.create()
 
   if (options.handler !== null) {
@@ -41,8 +45,48 @@ function Speaker (opts) {
     })
   }
 
-  return function write (buffer, callback) {
-    debug('write() (%o bytes)', buffer.length)
+  return function write (chunk, callback) {
+    debug('write() (%o bytes)', chunk.length)
+    if (options._closed) return debug('write() cannot be called after the speaker is closed.')
+
+    if (options.handler) {
+      var buffer = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, options) : chunk
+
+      var current
+      var remaining
+
+      if (remaining.length > 0) {
+        current = remaining
+        remaining = chunk
+      } else {
+        current = chunk
+        remaining = null
+      }
+
+      if (current.length > options.chunkSize) {
+        var temp = current
+        current = temp.slice(0, options.chunkSize)
+        remaining = temp.slice(options.chunkSize)
+      } else {
+        remaining = null
+      }
+
+      debug('Writing %o byte chunk', current.length)
+      binding.write(options.handler, current, current.length, )
+
+      function onWrite (status, chunk) {
+        debug('Wrote %o bytes', chunk.length)
+        if (status != 1) {
+          callback(new Error('write() failed when writing: ' + chunk), chunk)
+        } else if (remaining) {
+          debug('Writing %o remaining bytes in the chunk.', left.length)
+          write()
+        } else {
+          debug('Finished writing chunk.')
+          callback(null, chunk)
+        }
+      }
+    }
   }
 
   function _validate (options) {
@@ -108,6 +152,7 @@ function Speaker (opts) {
     function close (callback) {
       debug('close()')
       binding.close(options.handler, callback)
+      options._closed = true
       options.handler = null
     }
   }
