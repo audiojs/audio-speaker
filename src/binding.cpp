@@ -139,7 +139,7 @@ namespace {
 
     void write_async(uv_work_t *req) {
         write_req *wreq = reinterpret_cast<write_req *>(req->data);
-        wreq->done = out123_play(wreq->ao, wreq->buffer, wreq->length);
+        wreq->written = out123_play(wreq->ao, wreq->buffer, wreq->len);
     }
 
     void write_after(uv_work_t *req) {
@@ -148,7 +148,7 @@ namespace {
         write_req *wreq = reinterpret_cast<write_req *>(req->data);
 
         Local<Value> argv[] = {
-            Nan::New(wreq->done)
+            Nan::New(wreq->written)
         };
 
         wreq->callback->Call(1, argv);
