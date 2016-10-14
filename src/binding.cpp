@@ -78,8 +78,8 @@ namespace {
         write_req *req = new write_req;
         req->ao = ao;
         req->buffer = buffer;
-        req->length = length;
-        req->done = 0;
+        req->len = length;
+        req->written = 0;
         req->callback = new Nan::Callback(info[3].As<Function>());
 
         req->req.data = req;

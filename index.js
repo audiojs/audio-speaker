@@ -74,9 +74,9 @@ function Speaker (opts) {
       debug('Writing %o byte chunk', current.length)
       binding.write(options.handler, current, current.length, )
 
-      function onWrite (status, chunk) {
+      function onWrite (written) {
         debug('Wrote %o bytes', chunk.length)
-        if (status != 1) {
+        if (written != chunk.length) {
           callback(new Error('write() failed when writing: ' + chunk), chunk)
         } else if (remaining) {
           debug('Writing %o remaining bytes in the chunk.', left.length)
