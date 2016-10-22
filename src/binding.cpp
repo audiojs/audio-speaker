@@ -121,6 +121,7 @@ namespace {
         int value = 0;
 
         if(ao) {
+            out123_drop(ao);
             out123_close(ao);
             value = 1;
         } else {

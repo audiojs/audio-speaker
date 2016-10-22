@@ -53,7 +53,10 @@ function Speaker (opts) {
     })
   }
 
-  return function write (chunk, callback, remainder) {
+  write.end = end
+  return write
+
+  function write (chunk, remainder, callback) {
     debug('write()')
     if (options._closed) return debug('write() cannot be called after the speaker is closed.')
     if (chunk && options._busy) return debug('write() cannot be called until the previous buffer has been written.')
@@ -80,69 +83,33 @@ function Speaker (opts) {
         debug('Wrote %o bytes this chunk.', written)
         if(!remaining.length < 1) {
           debug('Writing remaining chunks.')
-          write(null, callback, remaining)
+          write(null, remaining, callback)
         } else {
-          binding.flush(options.handler, function (success) {
-            if (success != 1) {
-              debug('Could not flush the audio output')
-            } else {
-              debug('Flushed audio successfully.')
-            }
-          })
           debug('Finished writing chunk.')
           options._busy = false
           callback(null, written)
+          if (options.autoFlush) {
+            binding.flush(options.handler, function (success) {
+              if (success != 1) {
+                debug('Could not flush the audio output')
+              } else {
+                debug('Flushed audio successfully.')
+              }
+            })
+          }
         }
       }
     }
-
-    // if (options.handler) {
-    //   var buffer = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, options) : chunk
-    //
-    //   var currentT = null
-    //   var remainingT = null
-    //
-    //   if (rem !== null) {
-    //     currentT = new audioBuffer(options.channels, rem, options.sampleRate)
-    //     remainingT = new audioBuffer(options.channels, chunk, options.sampleRate)
-    //   } else {
-    //     currentT = chunk != null ? new audioBuffer(options.channels, chunk, options.sampleRate) : null
-    //     remainingT = null
-    //   }
-    //
-    //   var current = currentT ? currentT.data.buffer : null
-    //   var remaining = remainingT ? remainingT.data.buffer : null
-    //
-    //   if (current && current.byteLength > options.chunkSize) {
-    //     current = current ? current.slice(0, options.chunkSize) : null
-    //     remaining = remaining ? remaining.slice(options.chunkSize) : null
-    //   } else {
-    //     remaining = null
-    //   }
-    //
-    //   console.dir(current)
-    //   console.dir(remaining)
-    //
-    //   debug('Writing %o byte chunk', current.byteLength)
-    //   binding.write(options.handler, current, current.byteLength, onWrite)
-    //
-    //   function onWrite (written) {
-    //     debug('Wrote %o bytes', current.byteLength)
-    //     if (written != chunk.length) {
-    //       callback(new Error('write() failed when writing: ' + current), null)
-    //     } else if (remaining) {
-    //       debug('Writing %o remaining bytes in the chunk.', remaining.byteLength)
-    //       write(null, callback, remaining)
-    //     } else {
-    //       debug('Finished writing chunk.')
-    //       callback(null, chunk)
-    //     }
-    //   }
-    // }
   }
 
   function _validate (options) {
     debug('Format: Setting options - %o', Object.keys(options))
+    if (options.autoFlush !== undefined) {
+      debug('Format: Setting %o - %o', 'autoFlush', options.autoFlush)
+    } else {
+      debug('Format: Setting %o - %o', 'autoFlush', false)
+      options.autoFlush = false
+    }
     if (options.channels !== undefined) {
       debug('Format: Setting %o - %o', 'channels', options.channels)
     } else {
