@@ -4,7 +4,7 @@
   "description": "Output PCM data to a device or library.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,10 @@
     "is-audio-buffer": "^1.0.1",
     "nan": "2.2.0",
     "object-assign": "^4.1.0",
-    "pcm-util": "^2.0.3"
+    "pcm-util": "^2.0.3",
+    "audio-buffer": "^2.4.5"
+  },
+  "devDependencies": {
+    "audio-lena": "^1.1.0"
   }
 }

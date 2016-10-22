@@ -3,6 +3,7 @@ var objectAssign = require('object-assign')
 var binding = require('bindings')('binding')
 var pcm = require('pcm-util')
 var isAudioBuffer = require('is-audio-buffer')
+var audioBuffer = require('audio-buffer')
 var debug = require('debug')('speaker')
 
 var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
@@ -23,7 +24,7 @@ function Speaker (opts) {
 
   _validate(options)
 
-  var format = exports.getFormat(options);
+  var format = Speaker.getFormat(options);
   if (format === null) {
     throw new Error('Invalid format options')
   }
@@ -32,12 +33,18 @@ function Speaker (opts) {
 
   options.chunkSize = options.blockAlign * options.samplesPerFrame
 
-  options.handler = binding.create()
+  options.handler = binding.create((success) => {
+    if(!success) {
+      throw new Error('Failed to create the audio handler.')
+    } else {
+      debug('_create() audio handle successfully.')
+    }
+  })
 
   if (options.handler !== null) {
-    debug('_start(%o)', Object.values(options))
+    debug('_start(%o)', Object.keys(options))
     binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
-      if (success != 1) {
+      if (!success) {
         throw new Error('Could not start the audio output with these properties')
       } else {
         debug('Created and started handler successfully')
@@ -55,11 +62,11 @@ function Speaker (opts) {
       var current
       var remaining
 
-      if (remaining.length > 0) {
-        current = remaining
-        remaining = chunk
+      if (remaining != null) {
+        current = new audioBuffer(options.channels, remaining)
+        remaining = new audioBuffer(options.channels, chunk)
       } else {
-        current = chunk
+        current = new audioBuffer(options.channels, chunk)
         remaining = null
       }
 
@@ -72,7 +79,7 @@ function Speaker (opts) {
       }
 
       debug('Writing %o byte chunk', current.length)
-      binding.write(options.handler, current, current.length, )
+      binding.write(options.handler, current, current.length, onWrite)
 
       function onWrite (written) {
         debug('Wrote %o bytes', chunk.length)
@@ -91,44 +98,44 @@ function Speaker (opts) {
 
   function _validate (options) {
     debug('Format: Setting options - %o', Object.keys(options))
-    if (options.channels !== null) {
+    if (options.channels !== undefined) {
       debug('Format: Setting %o - %o', 'channels', options.channels)
     } else {
       debug('Format: Setting %o - %o', 'channels', 2)
       options.channels = 2
     }
-    if (options.bitDepth !== null) {
+    if (options.bitDepth !== undefined) {
       debug('Format: Setting %o - %o', 'bitDepth', options.bitDepth)
     } else {
       debug('Format: Setting %o - %o', 'bitDepth', options.float ? 32 : 16)
       options.bitDepth = options.float ? 32 : 16
     }
-    if (options.sampleRate !== null) {
+    if (options.sampleRate !== undefined) {
       debug('Format: Setting %o - %o', 'sampleRate', options.sampleRate)
     } else {
       debug('Format: Setting %o - %o', 'sampleRate', 44100)
       options.sampleRate = 44100
     }
-    if (options.signed !== null) {
+    if (options.signed !== undefined) {
       debug('Format: Setting %o - %o', 'signed', options.signed)
     } else {
       debug('Format: Setting %o - %o', 'signed', options.bitDepth != 8)
       options.signed = options.bitDepth != 8
     }
-    if (options.samplesPerFrame !== null) {
+    if (options.samplesPerFrame !== undefined) {
       debug('Format: Setting %o - %o', 'samplesPerFrame', options.samplesPerFrame)
     } else {
       debug('Format: Settings &o - %o', 'samplesPerFrame', 1024)
       options.samplesPerFrame = 1024
     }
-    if (options.float !== null) {
+    if (options.float !== undefined) {
       debug('Format: Setting %o - %o', 'float', options.float)
     }
     options.endianess = endianess;
     debug('Format: Settings applied')
   }
 
-  function function end (flush, callback) {
+  function end (flush, callback) {
     debug('end(%o)', flush)
     if (options._closed) return debug('_end() was called more than once. Already ended')
 
