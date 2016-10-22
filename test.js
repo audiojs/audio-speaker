@@ -7,8 +7,6 @@ console.log('Starting test.')
 var Speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
 var buf = new AudioBuffer(1, LenaBuffer)
 
-console.log(AudioSpeaker)
-
 Speaker(buf, null, function (err, written) {
     console.log('Test wrote ' + buf.length +' bytes of audio-lena.')
     Speaker.end(true, (success) => {

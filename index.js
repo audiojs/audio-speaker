@@ -17,7 +17,7 @@ function Speaker (opts) {
   objectAssign(options, opts)
 
   if (options.handler) {
-    throw new Error('_create() was called more than once. Only one handler should exist')
+    throw new Error('_create() was called more than once. Only one handler should exist.')
   }
 
   options._closed = false
@@ -27,7 +27,7 @@ function Speaker (opts) {
 
   var format = Speaker.getFormat(options)
   if (format === null) {
-    throw new Error('Invalid format options')
+    throw new Error('Invalid format options.')
   }
 
   options.blockAlign = options.bitDepth / 8 * options.channels
@@ -46,9 +46,9 @@ function Speaker (opts) {
     debug('_start(%o)', Object.keys(options))
     binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
       if (!success) {
-        throw new Error('Could not start the audio output with these properties')
+        throw new Error('Could not start the audio output with these properties.')
       } else {
-        debug('Created and started handler successfully')
+        debug('Created and started handler successfully.')
       }
     })
   }
@@ -91,7 +91,7 @@ function Speaker (opts) {
           if (options.autoFlush) {
             binding.flush(options.handler, function (success) {
               if (success != 1) {
-                debug('Could not flush the audio output')
+                debug('Could not flush the audio output.')
               } else {
                 debug('Flushed audio successfully.')
               }
@@ -149,14 +149,14 @@ function Speaker (opts) {
 
   function end (flush, callback) {
     debug('end(%o)', flush)
-    if (options._closed) return debug('_end() was called more than once. Already ended')
+    if (options._closed) return debug('_end() was called more than once. Already ended.')
 
     if (options.handler) {
       if (flush) {
-        debug('Flushing the audio output')
+        debug('Flushing the audio output.')
         binding.flush(options.handler, function (success) {
           if (success != 1) {
-            debug('Could not flush the audio output')
+            debug('Could not flush the audio output.')
           } else {
             return close(callback)
           }
@@ -165,7 +165,7 @@ function Speaker (opts) {
         return close(callback)
       }
     } else {
-      debug('Could not flush the audio output because handler does not exist')
+      debug('Could not flush the audio output because handler does not exist.')
     }
 
     function close (callback) {

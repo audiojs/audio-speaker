@@ -122,7 +122,7 @@ namespace {
 
         if(ao) {
             out123_drop(ao);
-            out123_close(ao);
+            out123_del(ao);
             value = 1;
         } else {
             value = 0;
