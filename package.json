@@ -4,7 +4,8 @@
   "description": "Output PCM data to a device or library.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node test"
+    "test": "node tests/one",
+    "testtwo": "node tests/two"
   },
   "repository": {
     "type": "git",

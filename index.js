@@ -86,9 +86,8 @@ function Speaker (opts) {
           write(null, remaining, callback)
         } else {
           debug('Finished writing chunk.')
-          options._busy = false
-          callback(null, written)
           if (options.autoFlush) {
+            debug('Flushing the audio output.')
             binding.flush(options.handler, function (success) {
               if (success != 1) {
                 debug('Could not flush the audio output.')
@@ -97,6 +96,8 @@ function Speaker (opts) {
               }
             })
           }
+          options._busy = false
+          callback(null, written)
         }
       }
     }
