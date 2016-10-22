@@ -28,15 +28,14 @@ namespace {
         out123_handle *ao = out123_new();
 
         if(!ao) {
-            fprintf(stderr, "Failed to initialize output handle. \n");
+            fprintf(stderr, "Failed to initialize output handle.\n");
             out123_del(ao);
             value = 0;
         } else if(out123_open(ao, NULL, NULL) != OUT123_OK) {
-            fprintf(stderr, "Failed to open output: %s \n", out123_strerror(ao));
+            fprintf(stderr, "Failed to open output: %s\n", out123_strerror(ao));
             out123_del(ao);
             value = 0;
         } else {
-          printf("Created audio handle at %i \n", ao);
           value = 1;
         }
 
@@ -59,10 +58,10 @@ namespace {
         const char *encname;
         encname = out123_enc_name(encoding);
 
-        printf("Playing with %i channels and %li Hz, encoding %s, handle %u.\n", channels, rate, encname ? encname : "???", ao);
+        printf("Playing with %i channels and %li Hz, encoding %s.\n", channels, rate, encname ? encname : "???");
 
         if(out123_start(ao, rate, channels, encoding) || !ao) {
-            fprintf(stderr, "Failed to start output: %s \n", out123_strerror(ao));
+            fprintf(stderr, "Failed to start output: %s\n", out123_strerror(ao));
             out123_del(ao);
             value = 0;
         } else {
@@ -165,8 +164,6 @@ namespace {
     void InitializeModule(Handle<Object> target) {
         Nan::HandleScope scope;
 
-        printf("Creating a test handler. \n"); // Debug message.
-
         out123_handle *ao = out123_new();
 
         long rate = 44100;
@@ -175,14 +172,12 @@ namespace {
         int framesize = 1;
 
         if(!ao) {
-            fprintf(stderr, "Failed to initialize output handle. \n");
+            fprintf(stderr, "Failed to initialize output handle.\n");
             out123_del(ao);
         } else if(out123_open(ao, NULL, NULL) != OUT123_OK) {
-            fprintf(stderr, "Failed to open output: %s", out123_strerror(ao));
+            fprintf(stderr, "Failed to open output: %s\n", out123_strerror(ao));
             out123_del(ao);
         }
-
-        printf("Successfully created a test handler. Will destroy handler and continue normal operation. \n"); // Debug message.
 
         #define CONST_INT(value) \
             Nan::ForceSet(target, Nan::New(#value).ToLocalChecked(), Nan::New(value), \

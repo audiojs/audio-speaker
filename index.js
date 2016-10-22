@@ -53,7 +53,7 @@ function Speaker (opts) {
   }
 
   return function write (chunk, callback) {
-    debug('write() (%o bytes)', chunk.length)
+    debug('write() %o total bytes', chunk.length)
     if (options._closed) return debug('write() cannot be called after the speaker is closed.')
 
     if (options.handler) {
@@ -125,7 +125,7 @@ function Speaker (opts) {
     if (options.samplesPerFrame !== undefined) {
       debug('Format: Setting %o - %o', 'samplesPerFrame', options.samplesPerFrame)
     } else {
-      debug('Format: Settings &o - %o', 'samplesPerFrame', 1024)
+      debug('Format: Settings %o - %o', 'samplesPerFrame', 1024)
       options.samplesPerFrame = 1024
     }
     if (options.float !== undefined) {

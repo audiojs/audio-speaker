@@ -1,12 +1,11 @@
 #include <nan.h>
 
 inline static void wrap_pointer_cb(char *data, void *hint) {
-    fprintf(stderr, "Wrapped pointer was garbage collected. \n"); // Debug message.
+    fprintf(stderr, "Wrapped pointer was garbage collected. \n");
 }
 
 inline static v8::Local<v8::Value> WrapPointer(void *ptr, size_t length) {
     void *user_data = NULL;
-    fprintf(stderr, "Wrapping pointer to a Node Buffer. \n"); // Debug message.
     return Nan::NewBuffer((char *)ptr, length, wrap_pointer_cb, user_data).ToLocalChecked();
 }
 
@@ -16,7 +15,6 @@ inline static v8::Local<v8::Value> WrapPointer(void *ptr) {
 
 inline static char * UnwrapPointer(v8::Local<v8::Value> buffer, int64_t offset = 0) {
     if(node::Buffer::HasInstance(buffer)) {
-        fprintf(stderr, "Unwrapping pointer from Node Buffer. \n"); // Debug message.
         return node::Buffer::Data(buffer.As<v8::Object>()) + offset;
     } else {
         return NULL;
