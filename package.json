@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node tests/play_once",
     "testtwice": "node tests/play_twice",
-    "teststream": "node tests/play_stream"
+    "teststream": "node tests/play_stream",
+    "testpull": "node tests/play_pull"
   },
   "repository": {
     "type": "git",
@@ -34,7 +35,8 @@
     "is-audio-buffer": "^1.0.1",
     "nan": "2.2.0",
     "object-assign": "^4.1.0",
-    "pcm-util": "^2.0.3"
+    "pcm-util": "^2.0.3",
+    "pull-stream": "^3.5.0"
   },
   "devDependencies": {
     "audio-through": "^2.1.9",

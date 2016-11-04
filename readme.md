@@ -1,6 +1,8 @@
-#audio-speaker [![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+#audio-speaker
 
-Output audio stream natively in node or through Web Audio in the browser.
+> Output audio natively in node.
+
+[![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
 More documentation coming soon.
 
