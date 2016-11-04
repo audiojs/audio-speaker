@@ -4,6 +4,9 @@
 
 [![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 
+NOTE: The browser implementation for this is being moved to a separate module to
+save space from mpg123 library and other node-only functions.
+
 ## Usage
 
 Accepts options in main function:
