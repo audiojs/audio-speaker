@@ -58,7 +58,7 @@ namespace {
         const char *encname;
         encname = out123_enc_name(encoding);
 
-        printf("Playing with %i channels and %li Hz, encoding %s.\n", channels, rate, encname ? encname : "???");
+        printf("Playing with %i channel(s), %li Hz(s) and encoding %s.\n", channels, rate, encname ? encname : "???");
 
         if(out123_start(ao, rate, channels, encoding) || !ao) {
             fprintf(stderr, "Failed to start output: %s\n", out123_strerror(ao));
