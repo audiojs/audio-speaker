@@ -4,13 +4,64 @@
 
 [![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-More documentation coming soon.
+## Usage
+
+Accepts options in main function:
+
+ - channels (default 2)
+ - sampleRate (default 44100)
+ - endianess (default 'LE')
+ - bitDepth (default 16)
+ - signed (default true)
+ - float (default false)
+ - autoFlush (default false)
+
+More documentation on these options will be added soon.
+
+We have some variety in the way you can write to the Speaker.
+
+### Stream
+```js
+var speaker = require('audio-speaker/stream')
+var generator = require('audio-generator/stream')
+
+generator(function (time) {
+  var p = Math.PI * 2
+  return [Math.sin(p * time * 441), Math.sin(p * time * 439)]
+}).pipe(speaker({ autoFlush: true }))
+```
+
+### Pull-stream
+```js
+var pull = require('pull-stream/pull')
+var speaker = require('audio-speaker/pull')
+var osc = require('audio-oscillator/pull')
+
+pull(osc({frequency: 440}), speaker({ autoFlush: true }))
+```
+
+### Direct
+
+```js
+var speaker = require('audio-speaker')
+var generator = require('audio-generator')
+
+var output = speaker({ autoFlush: true })
+var input = generator(t => Math.sin(t * Math.PI * 2 * 440))
+
+(function loop (err, buf) {
+  var buffer = input()
+  output(buffer, null, loop)
+})
+```
 
 ## Credits
 
 | ![connor][connor-avatar]      |
 | :---------------------------: |
 | [Connor Hartley][connor-link] |
+
+Thanks to @jamen and @dustindowell22 for the mpg123 env configurations.
 
 #### Related
 
