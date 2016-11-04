@@ -57,7 +57,10 @@ function Speaker (opts) {
   }
 
   write.end = end
-  return options.sink ? sink : write
+  write.sink = sink
+  sink.end = end
+  return write
+
 
   function write (chunk, remainder, callback) {
     debug('write()')
@@ -89,7 +92,7 @@ function Speaker (opts) {
           write(null, remaining, callback)
         } else {
           debug('Finished writing chunk.')
-          if (options.autoFlush) {
+          if (options.autoFlush && remaining.length < 1) {
             debug('Flushing the audio output.')
             binding.flush(options.handler, function (success) {
               if (success != 1) {
@@ -111,10 +114,11 @@ function Speaker (opts) {
     }
   }
 
-  function sink () {
-    if (options._closed) return callback(true)
+  function sink (callback) {
+    debug('sink()')
 
     return audioSink((data, callback) => {
+      if (options._closed) return callback(true)
       setTimeout(callback, samplesPerFrame / sampleRate)
     })
   }

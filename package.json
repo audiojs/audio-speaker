@@ -4,8 +4,9 @@
   "description": "Output PCM data to a device or library.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node tests/one",
-    "testtwo": "node tests/two"
+    "test": "node tests/play_once",
+    "testtwice": "node tests/play_twice",
+    "teststream": "node tests/play_stream"
   },
   "repository": {
     "type": "git",
@@ -36,6 +37,7 @@
     "pcm-util": "^2.0.3"
   },
   "devDependencies": {
+    "audio-through": "^2.1.9",
     "audio-lena": "^1.1.0"
   }
 }
