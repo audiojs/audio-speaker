@@ -4,10 +4,10 @@
   "description": "Output PCM data to a device or library.",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node tests/play_once",
-    "testtwice": "node tests/play_twice",
-    "teststream": "node tests/play_stream",
-    "testpull": "node tests/play_pull"
+    "test": "tape tests/play_once.js",
+    "testtwice": "tape tests/play_twice.js",
+    "teststream": "tape tests/play_stream.js",
+    "testpull": "tape tests/play_pull.js"
   },
   "repository": {
     "type": "git",
@@ -39,7 +39,8 @@
     "pull-stream": "^3.5.0"
   },
   "devDependencies": {
+    "audio-lena": "^1.1.0",
     "audio-through": "^2.1.9",
-    "audio-lena": "^1.1.0"
+    "tape": "^4.6.2"
   }
 }

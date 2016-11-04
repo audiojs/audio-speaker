@@ -159,8 +159,8 @@ function Speaker (opts) {
     if (options.channels !== undefined) {
       debug('Format: Setting %o - %o', 'channels', options.channels)
     } else {
-      debug('Format: Setting %o - %o', 'channels', 2)
-      options.channels = 2
+      debug('Format: Setting %o - %o', 'channels', 1)
+      options.channels = 1
     }
     if (options.bitDepth !== undefined) {
       debug('Format: Setting %o - %o', 'bitDepth', options.bitDepth)
