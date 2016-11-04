@@ -11,8 +11,8 @@ Speaker(buf, null, function (err, written) {
     console.log('Test wrote ' + buf.length +' bytes of audio-lena.')
     Speaker(buf, null, function (err, done) {
       console.log('Test wrote ' + (buf.length * 2) + ' bytes of audio-lena total over two runs.')
-      Speaker.end(false, (success) => {
-        console.log('Finished test two.')
+      Speaker.end(false, (err) => {
+        err ? console.log('Finished test two with errors.') : console.log('Finished test two with no errors.')
       })
     })
 })

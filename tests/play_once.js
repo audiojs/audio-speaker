@@ -8,10 +8,11 @@ var Speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: tr
 var buf = new AudioBuffer(1, LenaBuffer)
 
 Speaker(buf, null, (err, chunk) => {
-  if(err || chunk === true) {
-    console.log('Test ended with errors.')
+  if (err || chunk === true) {
+    console.log('Finished test with errors.')
   } else {
-    Speaker.end(true)
-    console.log('Test ended with no errors.')
+    Speaker.end(true, (err) => {
+      err ? console.log('Finished test with errors.') : console.log('Finished test with no errors.')
+    })
   }
 })

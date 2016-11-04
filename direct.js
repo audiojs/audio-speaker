@@ -13,6 +13,15 @@ var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
 
 module.exports = Speaker
 
+/**
+ * The Speaker function initializes a new audio handler,
+ * then returns the write method to output audio to.
+ *
+ * @param {Object} opts options for the speaker
+ * @return {Function} write write audio from a buffer or audiobuffer
+ * @module Speaker
+ * @api public
+ */
 function Speaker (opts) {
   debug('Speaker()')
   var options = {}
@@ -61,7 +70,20 @@ function Speaker (opts) {
   sink.end = end
   return write
 
-
+  /**
+   * The write function takes a buffer or audiobuffer and
+   * writes it to the speaker output. If the chunks are too
+   * large it will break it up and put the remainding chunks
+   * into a queue.
+   * NOTE: You can only write new chunks once the callback is
+   * called with no errors.
+   *
+   * @param {AudioBuffer} chunk (or Buffer) containing the data to be output
+   * @param {AudioBuffer} remainer (or Buffer) containing the remaining data, that should be kept null
+   * @param {Function} callback callback with error and chunk parameters
+   * @return void
+   * @api public
+   */
   function write (chunk, remainder, callback) {
     debug('write()')
     if (options._closed) return debug('write() cannot be called after the speaker is closed.')
@@ -168,6 +190,17 @@ function Speaker (opts) {
     debug('Format: Settings applied')
   }
 
+  /**
+   * The end function closes the speaker and stops
+   * it from writing anymore data. The output data
+   * that was already written can be optionally flushed.
+   * NOTE: You cannot write anymore data after closing the speaker.
+   *
+   * @param {Boolean} flush flushes the written data (default is false)
+   * @param {Function} callback callback with error parameter
+   * @return void
+   * @api public
+   */
   function end (flush, callback) {
     debug('end(%o)', flush)
     if (options._closed) return debug('_end() was called more than once. Already ended.')
@@ -191,13 +224,11 @@ function Speaker (opts) {
 
     function close (callback) {
       debug('close()')
-      if (callback) {
-        binding.close(options.handler, callback)
-      } else {
-        binding.close(options.handler, (success) => {
-          if (success != 1) throw new Error('Failed to close speaker.')
-        })
-      }
+      binding.close(options.handler, (success) => {
+        if (callback) {
+          success ? callback() : callback(new Error('Failed to close speaker.'))
+        }
+      })
       options._closed = true
       options.handler = null
     }
