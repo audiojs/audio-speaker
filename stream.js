@@ -28,7 +28,7 @@ function StreamSpeaker (opts) {
   this.speaker = Speaker(options)
 
   StreamSpeaker.prototype._write = function (chunk, encoding, callback) {
-    this.speaker(chunk, null, (err, written) => {
+    this.speaker(chunk, (err, written) => {
       return err ? callback(err) : callback()
     })
   }

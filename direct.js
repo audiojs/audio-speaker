@@ -79,57 +79,60 @@ function Speaker (opts) {
    * called with no errors.
    *
    * @param {AudioBuffer} chunk (or Buffer) containing the data to be output
-   * @param {AudioBuffer} remainer (or Buffer) containing the remaining data, that should be kept null
    * @param {Function} callback callback with error and chunk parameters
    * @return void
    * @api public
    */
-  function write (chunk, remainder, callback) {
+  function write (chunk, callback) {
     debug('write()')
     if (options._closed) return debug('write() cannot be called after the speaker is closed.')
     if (chunk && options._busy) return debug('write() cannot be called until the previous buffer has been written.')
 
-    if (options.handler) {
-      options._busy = true
+    next(chunk, null, callback)
 
-      var chunkBuf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, options) : chunk || new Buffer(0)
-      var remainderBuf = isAudioBuffer(remainder) ? pcm.toBuffer(remainder, options) : remainder || new Buffer(0)
+    function next (chunk, remainder, callback) {
+      if (options.handler) {
+        options._busy = true
 
-      var queue = Buffer.concat([remainderBuf, chunkBuf], remainderBuf.length + chunkBuf.length)
+        var chunkBuf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, options) : chunk || new Buffer(0)
+        var remainderBuf = isAudioBuffer(remainder) ? pcm.toBuffer(remainder, options) : remainder || new Buffer(0)
 
-      debug("%o bytes total queued for output.", queue.length)
+        var queue = Buffer.concat([remainderBuf, chunkBuf], remainderBuf.length + chunkBuf.length)
 
-      var output = queue.length > options.chunkSize ? queue.slice(0, options.chunkSize) : queue
-      var remaining = queue.length > options.chunkSize ? queue.slice(options.chunkSize, queue.length) : new Buffer(0)
+        debug("%o bytes total queued for output.", queue.length)
 
-      debug("%o bytes writing to the speaker.", output.length)
-      debug("%o bytes remaining in the queue.", remaining.length)
+        var output = queue.length > options.chunkSize ? queue.slice(0, options.chunkSize) : queue
+        var remaining = queue.length > options.chunkSize ? queue.slice(options.chunkSize, queue.length) : new Buffer(0)
 
-      binding.write(options.handler, output, output.length, onWrite)
+        debug("%o bytes writing to the speaker.", output.length)
+        debug("%o bytes remaining in the queue.", remaining.length)
 
-      function onWrite (written) {
-        debug('Wrote %o bytes this chunk.', written)
-        if(!remaining.length < 1) {
-          debug('Writing remaining chunks.')
-          write(null, remaining, callback)
-        } else {
-          debug('Finished writing chunk.')
-          if (options.autoFlush && remaining.length < 1) {
-            debug('Flushing the audio output.')
-            binding.flush(options.handler, function (success) {
-              if (success != 1) {
-                debug('Could not flush the audio output.')
-                options._busy = false
-                callback(new Error('Could not flush the audio output.'), written)
-              } else {
-                debug('Flushed audio successfully.')
-                options._busy = false
-                callback(null, written)
-              }
-            })
+        binding.write(options.handler, output, output.length, onWrite)
+
+        function onWrite (written) {
+          debug('Wrote %o bytes this chunk.', written)
+          if(!remaining.length < 1) {
+            debug('Writing remaining chunks.')
+            next(null, remaining, callback)
           } else {
-            options._busy = false
-            callback(null, written)
+            debug('Finished writing chunk.')
+            if (options.autoFlush && remaining.length < 1) {
+              debug('Flushing the audio output.')
+              binding.flush(options.handler, function (success) {
+                if (success != 1) {
+                  debug('Could not flush the audio output.')
+                  options._busy = false
+                  callback(new Error('Could not flush the audio output.'), written)
+                } else {
+                  debug('Flushed audio successfully.')
+                  options._busy = false
+                  callback(null, written)
+                }
+              })
+            } else {
+              options._busy = false
+              callback(null, written)
+            }
           }
         }
       }

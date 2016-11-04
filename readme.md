@@ -51,7 +51,7 @@ var input = generator(t => Math.sin(t * Math.PI * 2 * 440))
 
 (function loop (err, buf) {
   var buffer = input()
-  output(buffer, null, loop)
+  output(buffer, loop)
 })
 ```
 

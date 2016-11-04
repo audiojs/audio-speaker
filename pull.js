@@ -23,7 +23,7 @@ function PullSpeaker (opts) {
 
   var sink = pull(asyncMap(function (buf, done) {
     done(true)
-    speaker(buf, null, (err, written) => {
+    speaker(buf, (err, written) => {
       if (err) {
         speaker.end(false)
         done(err)
