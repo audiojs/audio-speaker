@@ -7,6 +7,16 @@ var Speaker = require('./index')
 
 module.exports = StreamSpeaker
 
+/**
+ * The StreamSpeaker function initializes a speaker
+ * and inherits {Module} AudioThrough for pipable data
+ * functionality.
+ *
+ * @param {Object} opts options for the speaker
+ * @return void
+ * @module StreamSpeaker
+ * @api public
+ */
 function StreamSpeaker (opts) {
   if (!(this instanceof StreamSpeaker)) return new StreamSpeaker(opts)
 
