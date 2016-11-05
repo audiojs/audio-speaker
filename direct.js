@@ -2,7 +2,7 @@
 
 var os = require('os')
 var objectAssign = require('object-assign')
-var binding = require('bindings')('binding')
+var binding = require('audio-mpg123')
 var pcm = require('pcm-util')
 var isAudioBuffer = require('is-audio-buffer')
 var audioBuffer = require('audio-buffer')
