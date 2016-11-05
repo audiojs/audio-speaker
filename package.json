@@ -1,6 +1,6 @@
 {
   "name": "audio-speaker",
-  "version": "1.9.9",
+  "version": "2.0.0-1",
   "description": "Output PCM data to a device or library.",
   "main": "lib/index.js",
   "scripts": {
