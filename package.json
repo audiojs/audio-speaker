@@ -1,6 +1,6 @@
 {
   "name": "audio-speaker",
-  "version": "2.0.0-1",
+  "version": "2.0.0-2",
   "description": "Output PCM data to a device or library.",
   "scripts": {
     "test": "tape tests/play_once.js",
