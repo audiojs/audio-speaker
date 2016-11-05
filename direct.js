@@ -26,7 +26,16 @@ function Speaker (opts) {
   debug('Speaker()')
   var options = {}
 
-  objectAssign(options, opts)
+  options = objectAssign({
+    channels: 1,
+    float: false,
+    bitDepth: opts.float ? 32 : 64,
+    signed: (opts.float ? 32 : 64) != 8,
+    samplesPerFrame: 1024,
+    sampleRate: 44100,
+    endianess: endianess,
+    autoFlush: false
+  }, opts)
 
   if (options.handler) {
     throw new Error('_create() was called more than once. Only one handler should exist.')
@@ -34,8 +43,6 @@ function Speaker (opts) {
 
   options._closed = false
   options._busy = false
-
-  _validate(options)
 
   var format = Speaker.getFormat(options)
   if (format === null) {
@@ -146,51 +153,6 @@ function Speaker (opts) {
       if (options._closed) return callback(true)
       setTimeout(callback, samplesPerFrame / sampleRate)
     })
-  }
-
-  function _validate (options) {
-    debug('Format: Setting options - %o', Object.keys(options))
-    if (options.autoFlush !== undefined) {
-      debug('Format: Setting %o - %o', 'autoFlush', options.autoFlush)
-    } else {
-      debug('Format: Setting %o - %o', 'autoFlush', false)
-      options.autoFlush = false
-    }
-    if (options.channels !== undefined) {
-      debug('Format: Setting %o - %o', 'channels', options.channels)
-    } else {
-      debug('Format: Setting %o - %o', 'channels', 1)
-      options.channels = 1
-    }
-    if (options.bitDepth !== undefined) {
-      debug('Format: Setting %o - %o', 'bitDepth', options.bitDepth)
-    } else {
-      debug('Format: Setting %o - %o', 'bitDepth', options.float ? 32 : 16)
-      options.bitDepth = options.float ? 32 : 16
-    }
-    if (options.sampleRate !== undefined) {
-      debug('Format: Setting %o - %o', 'sampleRate', options.sampleRate)
-    } else {
-      debug('Format: Setting %o - %o', 'sampleRate', 44100)
-      options.sampleRate = 44100
-    }
-    if (options.signed !== undefined) {
-      debug('Format: Setting %o - %o', 'signed', options.signed)
-    } else {
-      debug('Format: Setting %o - %o', 'signed', options.bitDepth != 8)
-      options.signed = options.bitDepth != 8
-    }
-    if (options.samplesPerFrame !== undefined) {
-      debug('Format: Setting %o - %o', 'samplesPerFrame', options.samplesPerFrame)
-    } else {
-      debug('Format: Settings %o - %o', 'samplesPerFrame', 1024)
-      options.samplesPerFrame = 1024
-    }
-    if (options.float !== undefined) {
-      debug('Format: Setting %o - %o', 'float', options.float)
-    }
-    options.endianess = endianess;
-    debug('Format: Settings applied')
   }
 
   /**
