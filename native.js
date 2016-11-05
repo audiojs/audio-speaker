@@ -29,8 +29,8 @@ function Speaker (opts) {
   options = objectAssign({
     channels: 1,
     float: false,
-    bitDepth: opts.float ? 32 : 64,
-    signed: (opts.float ? 32 : 64) != 8,
+    bitDepth: 16,
+    signed: true,
     samplesPerFrame: 1024,
     sampleRate: 44100,
     endianess: endianess,

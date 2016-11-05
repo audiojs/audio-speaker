@@ -1,3 +1,3 @@
 'use strict'
 
-module.exports = require('./direct')
+module.exports = require('is-browser') ? require('./browser') : require('./native')

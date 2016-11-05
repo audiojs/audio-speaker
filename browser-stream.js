@@ -22,3 +22,4 @@ function BrowserStreamSpeaker (opts) {
 
   WAAStream.call(this, ctx.destination, opts)
 }
+inherits(BrowserStreamSpeaker, WAAStream)

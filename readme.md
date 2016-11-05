@@ -4,9 +4,12 @@
 
 [![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 
+Note: Browser implementation is deprecated and will be replaced soon.
+
 ## Install
 
-`npm install audio-speaker``
+Node: `npm install audio-speaker`
+Browser: `npm install audio-speaker --no-optional`
 
 ## Usage
 
