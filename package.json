@@ -42,6 +42,6 @@
     "tape": "^4.6.2"
   },
   "optionalDependencies": {
-    "audio-mpg123": "^1.0.1"
+    "audio-mpg123": "^1.1.3"
   }
 }
