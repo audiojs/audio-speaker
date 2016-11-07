@@ -3,8 +3,9 @@
   "version": "2.0.0-4",
   "description": "Output PCM data to a device or library.",
   "scripts": {
-    "test": "tape tests/play_once.js",
-    "test:twice": "tape tests/play_twice.js",
+    "test": "tape tests/check.js",
+    "test:play": "tape tests/play_once.js",
+    "test:play_twice": "tape tests/play_twice.js",
     "test:stream": "tape tests/play_stream.js",
     "test:pull": "tape tests/play_pull.js"
   },
