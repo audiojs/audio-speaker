@@ -2,10 +2,12 @@
 
 var inherits = require('util').inherits
 var objectAssign = require('object-assign')
-var audioThrough = require('audio-through')
+var Through = require('audio-through')
 var Speaker = require('./index')
 
 module.exports = StreamSpeaker
+
+inherits(StreamSpeaker, Through)
 
 /**
  * The StreamSpeaker function initializes a speaker
@@ -20,19 +22,14 @@ module.exports = StreamSpeaker
 function StreamSpeaker (opts) {
   if (!(this instanceof StreamSpeaker)) return new StreamSpeaker(opts)
 
-  var options = {}
-  objectAssign(options, opts)
+  opts = opts || {};
+  Through.call(this, opts)
 
-  audioThrough.call(this, options)
-
-  this.speaker = Speaker(options)
-
-  StreamSpeaker.prototype._write = function (chunk, encoding, callback) {
-    this.speaker(chunk, (err, written) => {
-      return err ? callback(err) : callback()
-    })
-  }
-
-  StreamSpeaker.prototype.end = this.speaker.end
+  this.speaker = Speaker(opts)
+  this.on('end', () => this.speaker.end())
 }
-inherits(StreamSpeaker, audioThrough)
+StreamSpeaker.prototype.process = function (chunk, callback) {
+  this.speaker(chunk, (err, written) => {
+    return err ? callback(err) : callback()
+  });
+}
