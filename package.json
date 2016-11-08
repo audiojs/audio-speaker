@@ -13,6 +13,11 @@
     "type": "git",
     "url": "git+https://github.com/audiojs/audio-speaker.git"
   },
+  "main": "./index",
+  "browser": {
+    "./index": "./browser",
+    "./stream": "./browser-stream"
+  },
   "keywords": [
     "PCM",
     "output",
