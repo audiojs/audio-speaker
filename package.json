@@ -7,7 +7,8 @@
     "test:play": "tape tests/play_once.js",
     "test:play_twice": "tape tests/play_twice.js",
     "test:stream": "tape tests/play_stream.js",
-    "test:pull": "tape tests/play_pull.js"
+    "test:pull": "tape tests/play_pull.js",
+    "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
     "type": "git",
@@ -41,11 +42,16 @@
     "object-assign": "^4.1.0",
     "pcm-util": "^2.0.3",
     "pull-stream": "^3.5.0",
+    "audio-through": "^2.1.9",
     "web-audio-stream": "^2.2.0"
   },
   "devDependencies": {
+    "audio-buffer-utils": "^3.1.2",
+    "audio-generator": "^2.1.1",
     "audio-lena": "^1.1.0",
-    "audio-through": "^2.1.9",
+    "pcm-util": "^2.0.3",
+    "pcm-volume": "^1.0.0",
+    "pull-stream": "^3.5.0",
     "tape": "^4.6.2"
   },
   "optionalDependencies": {
