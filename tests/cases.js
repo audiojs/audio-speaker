@@ -24,9 +24,9 @@ test('Pure function', function (t) {
 
 	let write = SpeakerWriter();
 
-	(function loop (err, buf) {
+	(function loop (err) {
 		if (err) return write(null);
-		write(generate(buf), loop)
+		write(generate(), loop)
 	})();
 
 	setTimeout(() => {
