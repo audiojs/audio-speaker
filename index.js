@@ -7,7 +7,6 @@ var objectAssign = require('object-assign')
 var binding = require('audio-mpg123')
 var pcm = require('pcm-util')
 var isAudioBuffer = require('is-audio-buffer')
-var audioBuffer = require('audio-buffer')
 var audioSink = require('audio-sink/direct')
 var debug = require('debug')('speaker')
 
@@ -153,7 +152,7 @@ function Speaker (opts) {
 
     return audioSink((data, callback) => {
       if (options._closed) return callback(true)
-      setTimeout(callback, samplesPerFrame / sampleRate)
+      setTimeout(callback, options.samplesPerFrame / options.sampleRate)
     })
   }
 

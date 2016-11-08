@@ -1,7 +1,6 @@
 'use strict'
 
 var inherits = require('util').inherits
-var objectAssign = require('object-assign')
 var Through = require('audio-through')
 var Speaker = require('./index')
 
