@@ -5,14 +5,14 @@ var LenaBuffer = require('audio-lena/buffer')
 var AudioSpeaker = require('../index')
 
 test('play audio once test', function (t) {
-  var Speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
+  var speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
   var buf = new AudioBuffer(1, LenaBuffer)
 
-  Speaker(buf, (err, chunk) => {
+  speaker(buf, (err, chunk) => {
     if (err || chunk === true) {
       t.error(err, 'Write callback caught an unexpected error.')
     } else {
-      Speaker.end(true, (err) => {
+      speaker.end(true, (err) => {
         err ? t.error(err) : t.pass('Output successful.')
         t.end()
       })

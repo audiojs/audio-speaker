@@ -1,6 +1,7 @@
+/** @module  audio-speaker/browser */
 'use strict'
 
-var writer = require('web-audio-stream')
+var Writer = require('web-audio-stream/writer')
 var context = require('audio-context')
 
 module.exports = BrowserSpeaker
@@ -17,5 +18,5 @@ module.exports = BrowserSpeaker
 function BrowserSpeaker (opts) {
   var ctx = opts && opts.context || context
 
-  return write(ctx.destination, opts)
+  return Writer(ctx.destination, opts)
 }
