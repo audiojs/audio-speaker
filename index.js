@@ -94,7 +94,11 @@ function Speaker (opts) {
   function write (chunk, callback) {
     debug('write()')
     if (options._closed) return debug('write() cannot be called after the speaker is closed.')
-    if (chunk && options._busy) return debug('write() cannot be called until the previous buffer has been written.')
+
+    if (chunk && options._busy) {
+      debug('write() cannot be called until the previous buffer has been written.')
+      callback(new Error('Could not write chunk as the buffer was busy.'), 0)
+    }
 
     next(chunk, null, callback)
 
@@ -107,20 +111,13 @@ function Speaker (opts) {
 
         var queue = Buffer.concat([remainderBuf, chunkBuf], remainderBuf.length + chunkBuf.length)
 
-        debug("%o bytes total queued for output.", queue.length)
-
         var output = queue.length > options.chunkSize ? queue.slice(0, options.chunkSize) : queue
         var remaining = queue.length > options.chunkSize ? queue.slice(options.chunkSize, queue.length) : new Buffer(0)
-
-        debug("%o bytes writing to the speaker.", output.length)
-        debug("%o bytes remaining in the queue.", remaining.length)
 
         binding.write(options.handler, output, output.length, onWrite)
 
         function onWrite (written) {
-          debug('Wrote %o bytes this chunk.', written)
           if(!remaining.length < 1) {
-            debug('Writing remaining chunks.')
             next(null, remaining, callback)
           } else {
             debug('Finished writing chunk.')
@@ -128,7 +125,6 @@ function Speaker (opts) {
               debug('Flushing the audio output.')
               binding.flush(options.handler, function (success) {
                 if (success != 1) {
-                  debug('Could not flush the audio output.')
                   options._busy = false
                   callback(new Error('Could not flush the audio output.'), written)
                 } else {
@@ -176,7 +172,7 @@ function Speaker (opts) {
         debug('Flushing the audio output.')
         binding.flush(options.handler, function (success) {
           if (success != 1) {
-            debug('Could not flush the audio output.')
+            callback(new Error('Could not flush the audio output.'))
           } else {
             return close(callback)
           }
@@ -185,7 +181,7 @@ function Speaker (opts) {
         return close(callback)
       }
     } else {
-      debug('Could not flush the audio output because handler does not exist.')
+      callback(new Error('Could not flush the audio output. Handler was deleted or not created.'))
     }
 
     function close (callback) {
