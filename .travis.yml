@@ -18,7 +18,10 @@ env:
 install:
   - npm install -g npm
   - npm install -g node-pre-gyp
-  - npm install --mpg-module=dummy
+  - npm install
+  - cd ./node_modules/audio-mpg123
+  - node-pre-gyp clean
+  - node-pre-gyp rebuild --mpg123-module=dummy 
 script:
   - node -v
   - npm -v

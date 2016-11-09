@@ -55,6 +55,6 @@
     "tape": "^4.6.2"
   },
   "optionalDependencies": {
-    "audio-mpg123": "^1.2.2"
+    "audio-mpg123": "^1.2.3"
   }
 }
