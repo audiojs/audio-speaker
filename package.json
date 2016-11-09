@@ -8,6 +8,7 @@
     "test:play_twice": "tape tests/play_twice.js",
     "test:stream": "tape tests/play_stream.js",
     "test:pull": "tape tests/play_pull.js",
+    "test:sine": "node ./tests/play_sine.js",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {

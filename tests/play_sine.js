@@ -4,6 +4,8 @@
  * https://github.com/TooTallNate/node-speaker/blob/master/examples/sine.js
  */
 
+ // TODO: This can be updated to node v4 and higher.
+
 var Readable = require('stream').Readable;
 var Speaker = require('../stream');
 
@@ -16,7 +18,7 @@ var freq = parseFloat(process.argv[2], 10) || 440.0; // Concert A, default tone
 // seconds worth of audio data to generate before emitting "end"
 var duration = parseFloat(process.argv[3], 10) || 2.0;
 
-console.log('generating a %dhz sine wave for %d seconds', freq, duration);
+console.log('Generating a %dhz sine wave for %d seconds', freq, duration);
 
 // A SineWaveGenerator readable stream
 var sine = new Readable();
