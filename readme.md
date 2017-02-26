@@ -4,8 +4,6 @@
 
 [![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 
-Note: Browser implementation is deprecated and will be replaced soon.
-
 ## Install
 
 Node: `npm install audio-speaker`
@@ -35,7 +33,7 @@ var generator = require('audio-generator/stream')
 generator(function (time) {
   var p = Math.PI * 2
   return [Math.sin(p * time * 441), Math.sin(p * time * 439)]
-}).pipe(speaker({ autoFlush: true }))
+}).pipe(speaker())
 ```
 
 ### Pull-stream
@@ -44,7 +42,7 @@ var pull = require('pull-stream/pull')
 var speaker = require('audio-speaker/pull')
 var osc = require('audio-oscillator/pull')
 
-pull(osc({frequency: 440}), speaker({ autoFlush: true }))
+pull(osc({frequency: 440}), speaker())
 ```
 
 ### Direct
@@ -53,7 +51,7 @@ pull(osc({frequency: 440}), speaker({ autoFlush: true }))
 var speaker = require('audio-speaker')
 var generator = require('audio-generator')
 
-var output = speaker({ autoFlush: true })
+var output = speaker()
 var input = generator(t => Math.sin(t * Math.PI * 2 * 440))
 
 (function loop (err, buf) {
