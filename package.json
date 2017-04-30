@@ -48,7 +48,7 @@
     "speaker": "^0.3.0"
   },
   "dependencies": {
-    "audio-through": "^2.1.1",
+    "audio-through": "^2.1.6",
     "inherits": "^2.0.1",
     "is-audio-buffer": "^1.0.1",
     "pcm-util": "^2.0.3",
