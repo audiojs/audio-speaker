@@ -9,7 +9,7 @@ var pcm = require('pcm-util');
 var Through = require('audio-through');
 Through.log = true;
 var Volume = require('pcm-volume');
-var test = require('tst')//.only();
+var test = require('tape')
 var SpeakerWriter = require('./direct');
 var pull = require('pull-stream');
 var PullSpeaker = require('./pull');
@@ -23,7 +23,7 @@ require('insert-styles')(`
 	}
 `);
 
-test('Pure function', function (done) {
+test('Pure function', function (t) {
 	let generate = Generate(t => {
 		return Math.sin(t * Math.PI * 2 * 440);
 	}, 1);
@@ -37,11 +37,11 @@ test('Pure function', function (done) {
 
 	setTimeout(() => {
 		write(null);
-		done();
+		t.end();
 	}, 200);
 });
 
-test('Pull stream', function (done) {
+test('Pull stream', function (t) {
 	let out = PullSpeaker();
 
 	pull(
@@ -51,26 +51,29 @@ test('Pull stream', function (done) {
 
 	setTimeout(() => {
 		out.abort();
-		done();
+		t.end();
 	}, 500);
 });
 
-test('Cleanness of wave', function () {
+test('Cleanness of wave', function (t) {
 	Through(function (buffer) {
 		var self = this;
 		util.fill(buffer, function (sample, idx, channel) {
 			return Math.sin(Math.PI * 2 * (self.count + idx) * 440 / 44100);
 		});
 
-		if (this.time > 1) return this.end();
+		if (this.time > 2) return this.end();
 
 		return buffer;
 	})
-	.pipe(Speaker());
+	.on('end', function () {
+		t.end()
+	})
+	.pipe(Speaker())
 	// .pipe(WAASteam(context.destination));
 });
 
-test('Feed audio-through', function () {
+test('Feed audio-through', function (t) {
 	Generator({
 		generate: function (time) {
 			return [
@@ -80,14 +83,16 @@ test('Feed audio-through', function () {
 			]
 		},
 		duration: .4
-	}).pipe(Speaker());
+	})
+	.on('end', function () {t.end()})
+	.pipe(Speaker())
 });
 
-test('Feed raw pcm', function () {
+test('Feed raw pcm', function (t) {
 	var count = 0;
 	Readable({
 		read: function (size) {
-			var abuf = util.create(2, 1024, 44100);
+			var abuf = util.create(1024, 2, 44100);
 
 			//EGG: swap ch & i and hear wonderful sfx
 			util.fill(abuf, function (v, i, ch) {
@@ -104,18 +109,19 @@ test('Feed raw pcm', function () {
 			this.push(buf);
 		}
 	})
+	.on('end', function () {t.end()})
 	.pipe(Speaker({
 		channels: 2
-	}));
+	}))
 });
 
 //FIXME: use transform stream here to send floats data to speaker
-test.skip('Feed custom pcm', function () {
+test.skip('Feed custom pcm', function (t) {
 	var count = 0;
 	Readable({
 		// objectMode: 1,
 		read: function (size) {
-			var abuf = util.create(2, 1024, 44100);
+			var abuf = util.create(1024, 2, 44100);
 
 			util.fill(abuf, function (v, i, ch) {
 				return Math.sin(Math.PI * 2 * ((count + i)/44100) * (938 + ch*2) );
@@ -131,28 +137,31 @@ test.skip('Feed custom pcm', function () {
 
 			this.push(buf);
 		}
-	}).pipe(Speaker({
+	})
+	.on('end', function () {t.end()})
+	.pipe(Speaker({
 		channels: 2,
 
 		//EGG: comment this and hear wonderful sfx
 		float: true
-	}));
+	}))
 });
 
 test.skip('Feed random buffer size');
 
-test('Volume case', function () {
-	Generator({
-		generate: function (time) {
+test('Volume case', function (t) {
+	//TODO: fix the case!
+	Generator(function (time) {
 			return [
 				Math.sin(Math.PI * 2 * time * 1038 ) / 5,
 				Math.sin(Math.PI * 2 * time * 1042 ) / 5
 			];
-		},
+		}, {
 		duration: 1
 	})
+	.on('end', function () {t.end()})
 	.pipe(Volume(5))
-	.pipe(Speaker());
+	.pipe(Speaker())
 });
 
 

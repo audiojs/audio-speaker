@@ -40,6 +40,7 @@
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
+    "tape": "^4.6.3",
     "tst": "^1.1.8",
     "wavefont": "^1.2.1"
   },
@@ -48,12 +49,12 @@
     "speaker": "^0.3.0"
   },
   "dependencies": {
-    "audio-through": "^2.1.1",
+    "audio-through": "^2.2.3",
     "inherits": "^2.0.1",
     "is-audio-buffer": "^1.0.1",
-    "pcm-util": "^2.0.3",
+    "object-assign": "^4.1.1",
+    "pcm-util": "^2.1.0",
     "pull-stream": "^3.4.5",
-    "web-audio-stream": "^2.1.2",
-    "xtend": "^4.0.1"
+    "web-audio-stream": "^3.0.1"
   }
 }

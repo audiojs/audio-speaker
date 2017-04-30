@@ -7,7 +7,7 @@
 'use strict';
 
 var inherits = require('inherits');
-var extend = require('xtend/mutable');
+var extend = require('object-assign');
 var Through = require('audio-through');
 
 var NodeSpeaker;

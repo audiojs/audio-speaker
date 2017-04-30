@@ -9,7 +9,7 @@ module.exports = Speaker;
 
 
 function Speaker(options) {
-	let ctx = options && options.context || context;
+	let ctx = options && options.context || context();
 
 	return Writer(ctx.destination, options);
 }

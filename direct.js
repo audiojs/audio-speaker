@@ -8,7 +8,7 @@
 
 const pcm = require('pcm-util');
 const isAudioBuffer = require('is-audio-buffer');
-const extend = require('xtend/mutable');
+const extend = require('object-assign');
 
 const format = {
 	float: false,

@@ -16,7 +16,7 @@ inherits(Speaker, WAAStream);
 function Speaker(options) {
 	if (!(this instanceof Speaker)) return new Speaker(options);
 
-	let ctx = options && options.context || context;
+	let ctx = options && options.context || context();
 
 	WAAStream.call(this, ctx.destination, options);
 }
