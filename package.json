@@ -34,7 +34,7 @@
   "homepage": "https://github.com/audiojs/audio-speaker",
   "devDependencies": {
     "audio-buffer-utils": "^4.0.0",
-    "audio-context": "^0.1.0",
+    "audio-context": "^1.0.0",
     "audio-generator": "^2.0.1",
     "eslint": "^3.4.0",
     "insert-styles": "^1.2.1",
