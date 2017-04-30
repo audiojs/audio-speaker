@@ -1,37 +1,51 @@
 {
   "name": "audio-speaker",
-  "version": "1.4.3",
-  "description": "Output audio data to speaker in browser/node",
-  "main": "stream.js",
+  "version": "2.0.0-5",
+  "description": "Output PCM data to a device or library.",
   "scripts": {
-    "preversion": "npm run lint && npm run test",
-    "lint": "eslint *.js --ignore-pattern test*",
-    "test:browser": "budo test.js",
-    "test": "node test"
+    "test": "tape tests/check.js",
+    "test:play": "tape tests/play_once.js",
+    "test:play_twice": "tape tests/play_twice.js",
+    "test:stream": "tape tests/play_stream.js",
+    "test:pull": "tape tests/play_pull.js",
+    "test:sine": "node ./tests/play_sine.js",
+    "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/audiojs/audio-speaker"
+    "url": "git+https://github.com/audiojs/audio-speaker.git"
+  },
+  "main": "./index",
+  "browser": {
+    "./index": "./browser",
+    "./stream": "./browser-stream"
   },
   "keywords": [
+    "PCM",
+    "output",
     "audio",
     "audiojs",
-    "pcm",
-    "speaker",
-    "web-audio",
-    "sound",
-    "sink"
+    "binding",
+    "native"
   ],
-  "browser": {
-    "./direct.js": "./browser-direct.js",
-    "./stream.js": "./browser-stream.js"
-  },
-  "author": "Dima Yv <dfcreative@gmail.com>",
+  "author": "Connor Hartley (https://github.com/connorhartley)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/audiojs/audio-speaker/issues"
   },
-  "homepage": "https://github.com/audiojs/audio-speaker",
+  "homepage": "https://github.com/audiojs/audio-speaker#readme",
+  "dependencies": {
+    "audio-buffer": "^2.4.5",
+    "audio-sink": "^1.1.6",
+    "debug": "^2.2.0",
+    "is-audio-buffer": "^1.0.1",
+    "is-browser": "^2.0.1",
+    "object-assign": "^4.1.0",
+    "pcm-util": "^2.0.3",
+    "pull-stream": "^3.5.0",
+    "audio-through": "^2.1.9",
+    "web-audio-stream": "^2.2.0"
+  },
   "devDependencies": {
     "audio-buffer-utils": "^4.0.0",
     "audio-context": "^1.0.0",
@@ -40,20 +54,10 @@
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
-    "tst": "^1.1.8",
-    "wavefont": "^1.2.1"
+    "pull-stream": "^3.5.0",
+    "tape": "^4.6.2"
   },
   "optionalDependencies": {
-    "audio-sink": "^1.0.2",
-    "speaker": "^0.3.0"
-  },
-  "dependencies": {
-    "audio-through": "^2.1.1",
-    "inherits": "^2.0.1",
-    "is-audio-buffer": "^1.0.1",
-    "pcm-util": "^2.0.3",
-    "pull-stream": "^3.4.5",
-    "web-audio-stream": "^2.1.2",
-    "xtend": "^4.0.1"
+    "audio-mpg123": "^1.2.3"
   }
 }

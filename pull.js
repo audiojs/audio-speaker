@@ -1,22 +1,38 @@
+'use strict'
+
+var drain = require('pull-stream/sinks/drain')
+var asyncMap = require('pull-stream/throughs/async-map')
+var pull = require('pull-stream/pull')
+var Speaker = require('./index')
+
+module.exports = PullSpeaker
+
 /**
- * @module audio-speaker/pull
+ * The PullSpeaker function initializes a speaker
+ * and returns a sink for data to be pulled to, which
+ * is then written to the speaker.
  *
+ * @param {Object} opts options for the speaker
+ * @return {Drain} drain pull-stream sink for the data to be pulled to
+ * @module PullSpeaker
+ * @api public
  */
-'use strict';
+function PullSpeaker (opts) {
+  var speaker = Speaker(opts)
+  var d = drain()
 
-const Writer = require('./direct');
-const drain = require('pull-stream/sinks/drain');
-const asyncMap = require('pull-stream/throughs/async-map');
-const pull = require('pull-stream/pull');
+  var sink = pull(asyncMap(function (buf, done) {
+    done(true)
+    speaker(buf, (err, written) => {
+      if (err) {
+        speaker.end(false)
+        done(err)
+      } else {
+        speaker.end(true)
+      }
+    })
+  }), d)
 
-
-module.exports = function PullSpeaker (opts) {
-	let sinkFn = Writer(opts);
-	let d = drain();
-
-	let sink = pull(asyncMap(sinkFn), d);
-
-	sink.abort = d.abort;
-
-	return sink;
+  sink.abort = d.abort
+  return sink
 }
