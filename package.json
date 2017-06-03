@@ -45,7 +45,7 @@
     "wavefont": "^1.2.1"
   },
   "optionalDependencies": {
-    "audio-sink": "^1.0.2",
+    "audio-sink": "^1.1.5",
     "speaker": "^0.3.0"
   },
   "dependencies": {
