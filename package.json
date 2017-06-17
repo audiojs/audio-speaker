@@ -53,7 +53,7 @@
     "inherits": "^2.0.1",
     "is-audio-buffer": "^1.0.1",
     "object-assign": "^4.1.1",
-    "pcm-util": "^2.1.0",
+    "pcm-util": "^3.0.0",
     "pull-stream": "^3.4.5",
     "web-audio-stream": "^3.0.1"
   }
