@@ -14,7 +14,7 @@ test('play sine for 4 seconds', t => {
 		write.end(false, (err) => {
       err ? t.error(err) : t.pass('Output successful.')
     })
-	}, 4000);
+  }, 4000);
 
   (function loop (err, chunk) {
     if (err || chunk < 1) {

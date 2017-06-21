@@ -40,12 +40,17 @@ var speaker = require('audio-speaker')
 var generator = require('audio-generator')
 
 var write = speaker({ autoFlush: true })
-var input = generator(t => Math.sin(t * Math.PI * 2 * 440))
+var generate = generator(t => Math.sin(t * Math.PI * 2 * 440))
 
-(function loop (err, buf) {
-  var buffer = input()
-  write(buffer, loop)
-})
+(function loop (err, chunk) {
+  if (err || chunk < 1) {
+    return
+  } else {
+    write(generate(), (err, chunk) => {
+      loop(err, chunk)
+    })
+  }
+})();
 ```
 
 #### Also see
