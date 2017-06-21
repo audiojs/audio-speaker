@@ -4,7 +4,7 @@ var AudioBuffer = require('audio-buffer')
 var LenaBuffer = require('audio-lena/buffer')
 var AudioSpeaker = require('../index')
 
-test('play audio once test', function (t) {
+test('play audio once test', t => {
   var speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
   var buf = new AudioBuffer(1, LenaBuffer)
 

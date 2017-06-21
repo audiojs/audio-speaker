@@ -4,7 +4,8 @@
   "description": "Output PCM data to a device or library.",
   "scripts": {
     "test": "tape tests/check.js",
-    "test:play": "tape tests/play_once.js",
+    "test:lena": "tape tests/play_lena.js",
+    "test:sine": "tape tests/play_sine.js",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
