@@ -5,7 +5,6 @@
   "scripts": {
     "test": "tape tests/check.js",
     "test:play": "tape tests/play_once.js",
-    "test:play_twice": "tape tests/play_twice.js",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {

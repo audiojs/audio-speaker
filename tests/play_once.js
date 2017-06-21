@@ -14,8 +14,9 @@ test('play audio once test', function (t) {
     } else {
       speaker.end(true, (err) => {
         err ? t.error(err) : t.pass('Output successful.')
-        t.end()
       })
     }
   })
+
+  t.end()
 })
