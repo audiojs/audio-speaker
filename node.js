@@ -106,8 +106,8 @@ function Speaker (opts) {
       if (options.handler) {
         options._busy = true
 
-        var chunkBuf = isAudioBuffer(chunk) ? pcm.toBuffer(chunk, options) : chunk || new Buffer(0)
-        var remainderBuf = isAudioBuffer(remainder) ? pcm.toBuffer(remainder, options) : remainder || new Buffer(0)
+        var chunkBuf = isAudioBuffer(chunk) ? Buffer.from(pcm.toArrayBuffer(chunk, options)) : chunk || new Buffer(0)
+        var remainderBuf = isAudioBuffer(remainder) ? Buffer.from(pcm.toArrayBuffer(remainder, options)) : remainder || new Buffer(0)
 
         var queue = Buffer.concat([remainderBuf, chunkBuf], remainderBuf.length + chunkBuf.length)
 
