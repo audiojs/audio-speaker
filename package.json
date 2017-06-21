@@ -38,14 +38,12 @@
     "is-audio-buffer": "^1.0.1",
     "is-browser": "^2.0.1",
     "object-assign": "^4.1.0",
-    "pcm-util": "^2.1.0",
+    "pcm-util": "^3.0.0",
     "web-audio-write": "^1.0.0"
   },
   "devDependencies": {
-    "audio-buffer-utils": "^3.1.2",
-    "audio-generator": "^2.1.1",
-    "audio-lena": "^1.1.0",
-    "pcm-util": "^2.0.3",
+    "audio-buffer-utils": "^5.0.1",
+    "audio-lena": "^2.1.0",
     "pcm-volume": "^1.0.0",
     "pull-stream": "^3.5.0",
     "tape": "^4.6.3"

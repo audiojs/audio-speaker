@@ -1,12 +1,12 @@
 var test = require('tape')
 
-var AudioBuffer = require('audio-buffer')
-var LenaBuffer = require('audio-lena/buffer')
+var util = require('audio-buffer-utils')
+var LenaBuffer = require('audio-lena/raw')
 var AudioSpeaker = require('../index')
 
 test('play audio once test', t => {
   var speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: true })
-  var buf = new AudioBuffer(1, LenaBuffer)
+  var buf = util.create(LenaBuffer)
 
   speaker(buf, (err, chunk) => {
     if (err || chunk === true) {
