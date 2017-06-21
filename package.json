@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "audio-buffer-utils": "^5.0.1",
+    "audio-generator": "^2.1.2",
     "audio-lena": "^2.1.0",
     "pcm-volume": "^1.0.0",
     "pull-stream": "^3.5.0",
