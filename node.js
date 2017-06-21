@@ -121,7 +121,7 @@ function Speaker (opts) {
             next(null, remaining, callback)
           } else {
             debug('Finished writing chunk.')
-            if (options.autoFlush && remaining.length < 1) {
+            if (options.autoFlush && remaining.length < options.chunkSize) {
               debug('Flushing the audio output.')
               binding.flush(options.handler, function (success) {
                 if (success != 1) {

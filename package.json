@@ -5,6 +5,7 @@
   "scripts": {
     "test": "tape tests/check.js",
     "test:lena": "tape tests/play_lena.js",
+    "test:lena_auto": "tape tests/play_lena_auto.js",
     "test:sine": "tape tests/play_sine.js",
     "lint": "eslint *.js --ignore-pattern test*"
   },
