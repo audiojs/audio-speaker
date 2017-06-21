@@ -25,58 +25,32 @@ Accepts options in main function:
 
 More documentation on these options will be added soon.
 
-We have some variety in the way you can write to the Speaker.
+### Usage
 
-### Stream
 ```js
-var speaker = require('audio-speaker/stream')
-var generator = require('audio-generator/stream')
-
-generator(function (time) {
-  var p = Math.PI * 2
-  return [Math.sin(p * time * 441), Math.sin(p * time * 439)]
-}).pipe(speaker({ autoFlush: true }))
+var speaker = require('audio-speaker');
+var write = speaker();
+write(audioBuffer|data, callback);
 ```
 
-### Pull-stream
-```js
-var pull = require('pull-stream/pull')
-var speaker = require('audio-speaker/pull')
-var osc = require('audio-oscillator/pull')
-
-pull(osc({frequency: 440}), speaker({ autoFlush: true }))
-```
-
-### Direct
+### Example
 
 ```js
 var speaker = require('audio-speaker')
 var generator = require('audio-generator')
 
-var output = speaker({ autoFlush: true })
+var write = speaker({ autoFlush: true })
 var input = generator(t => Math.sin(t * Math.PI * 2 * 440))
 
 (function loop (err, buf) {
   var buffer = input()
-  output(buffer, loop)
+  write(buffer, loop)
 })
 ```
 
-## Credits
-
-| ![connor][connor-avatar]      |
-| :---------------------------: |
-| [Connor Hartley][connor-link] |
-
-Thanks to @jamen and @dustindowell22 for the mpg123 env configurations.
-
-#### Related
+#### Also see
 
 > [mpg123](https://github.com/audiojs/mpg123) - modifications to mpg123 to suit audio-speaker.<br/>
 > [web-audio-stream](https://github.com/audiojs/web-audio-stream) — stream data to web-audio.<br/>
 > [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
-> [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
 > [audio-feeder](https://github.com/brion/audio-feeder) — cross-browser speaker for pcm data.<br/>
-
-  [connor-avatar]: https://avatars0.githubusercontent.com/u/12867785?v=3&s=125
-  [connor-link]: https://github.com/connorhartley
