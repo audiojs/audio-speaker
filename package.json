@@ -4,6 +4,7 @@
   "description": "Output PCM data to a device or library.",
   "scripts": {
     "test": "node test",
+    "test:browser": "budo test",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
