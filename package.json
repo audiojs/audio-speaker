@@ -3,8 +3,7 @@
   "version": "2.0.0-5",
   "description": "Output PCM data to a device or library.",
   "scripts": {
-    "test": "tape tests/check.js",
-    "test:node": "tape tests/node/**/*.js",
+    "test": "node test",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
@@ -12,9 +11,7 @@
     "url": "git+https://github.com/audiojs/audio-speaker.git"
   },
   "main": "./index",
-  "browser": {
-    "./index": "./browser"
-  },
+  "browser": "./browser",
   "keywords": [
     "PCM",
     "output",
