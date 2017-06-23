@@ -34,6 +34,8 @@ function Speaker (opts) {
     autoFlush: false
   }, opts)
 
+  assert(options, 'Applied speaker options')
+
   if (options.handler) {
     throw new Error('_create() was called more than once. Only one handler should exist.')
   }
@@ -53,8 +55,6 @@ function Speaker (opts) {
   options.handler = binding.create((success) => {
     if(!success) {
       throw new Error('Failed to create the audio handler.')
-    } else {
-      assert(binding, 'Audio handler created')
     }
   })
 
@@ -62,8 +62,6 @@ function Speaker (opts) {
     binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
       if (!success) {
         throw new Error('Could not start the audio output with these properties.')
-      } else {
-        assert(options, 'Audio handler options applied')
       }
     })
   }
@@ -89,10 +87,9 @@ function Speaker (opts) {
   function write (chunk, callback) {
     if (!callback) callback = noop
 
-    if (options._closed) return assert(chunk, 'Write cannot occur after the speaker is closed')
+    if (options._closed) return callback(new Error('Write cannot occur after the speaker is closed.'))
 
     if (chunk && options._busy) {
-      assert(chunk, 'Write cannot occur until the previous chunk is processed')
       callback(new Error('Cannot write chunk as the buffer was busy.'), 0)
     }
 
@@ -121,7 +118,6 @@ function Speaker (opts) {
                   options._busy = false
                   callback(new Error('Could not flush the audio output.'), written)
                 } else {
-                  assert(chunk, 'Finished flushing chunk')
                   options._busy = false
                   callback(null, written)
                 }
@@ -133,7 +129,6 @@ function Speaker (opts) {
           }
         })
       } else {
-        assert(chunk, 'Abandoning remaining chunks as the speaker has closed')
         callback(new Error('Could not write remaining chunks as the speaker is closed.'), 0)
       }
     }
@@ -158,7 +153,7 @@ function Speaker (opts) {
    * @api public
    */
   function end (flush, callback) {
-    if (options._closed) return assert(flush, 'Closing the speaker cannot occur after the speaker is already closed')
+    if (options._closed) return callback(new Error('Closing the speaker cannot occur after the speaker is already closed.'))
 
     if (options.handler) {
       if (flush) {
@@ -166,7 +161,6 @@ function Speaker (opts) {
           if (success != 1) {
             callback(new Error('Could not flush the audio output.'))
           } else {
-            assert(flush, 'Finished flushing chunk')
             return close(callback)
           }
         })
@@ -183,7 +177,6 @@ function Speaker (opts) {
           if (success != 1) {
             callback(new Error('Failed to close speaker.'))
           } else {
-            assert(options.handler, 'Closed speaker')
             callback()
           }
         }
