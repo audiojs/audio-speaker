@@ -108,7 +108,6 @@ function Speaker (opts) {
           if(!remaining.length < 1) {
             next(null, remaining, callback)
           } else {
-            assert(written, 'Finished writing chunk')
             if (options.autoFlush && remaining.length < options.chunkSize) {
               binding.flush(options.handler, function (success) {
                 if (success != 1) {
