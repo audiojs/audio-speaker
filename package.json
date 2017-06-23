@@ -28,7 +28,6 @@
   },
   "homepage": "https://github.com/audiojs/audio-speaker#readme",
   "dependencies": {
-    "assert": "^1.4.1",
     "audio-context": "^1.0.1",
     "audio-sink": "^1.1.6",
     "is-audio-buffer": "^1.0.11",

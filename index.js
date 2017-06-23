@@ -3,7 +3,6 @@
 
 var os = require('os')
 var pcm = require('pcm-util')
-var assert = require('assert')
 var binding = require('audio-mpg123')
 var objectAssign = require('object-assign')
 var audioSink = require('audio-sink/direct')
@@ -33,8 +32,6 @@ function Speaker (opts) {
     endianess: endianess,
     autoFlush: false
   }, opts)
-
-  assert(options, 'Applied speaker options')
 
   if (options.handler) {
     throw new Error('_create() was called more than once. Only one handler should exist.')
