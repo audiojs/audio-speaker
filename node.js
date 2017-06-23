@@ -134,6 +134,9 @@ function Speaker (opts) {
             }
           }
         })
+      } else {
+        assert(chunk, 'Abandoning remaining chunks as the speaker has closed')
+        callback(new Error('Could not write remaining chunks as the speaker is closed.'), 0)
       }
     }
   }
