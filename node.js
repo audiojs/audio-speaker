@@ -23,8 +23,6 @@ module.exports = Speaker
  * @api public
  */
 function Speaker (opts) {
-  assert(opts, 'Pass options into speaker')
-
   var options = {}
 
   options = objectAssign({
@@ -37,6 +35,8 @@ function Speaker (opts) {
     endianess: endianess,
     autoFlush: false
   }, opts)
+
+  assert(options, 'Options applied to speaker')
 
   if (options.handler) {
     throw new Error('_create() was called more than once. Only one handler should exist.')
