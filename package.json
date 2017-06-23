@@ -4,9 +4,7 @@
   "description": "Output PCM data to a device or library.",
   "scripts": {
     "test": "tape tests/check.js",
-    "test:lena": "tape tests/play_lena.js",
-    "test:lena_auto": "tape tests/play_lena_auto.js",
-    "test:sine": "tape tests/play_sine.js",
+    "test:node": "tape tests/node/**/*.js",
     "lint": "eslint *.js --ignore-pattern test*"
   },
   "repository": {
@@ -32,21 +30,21 @@
   },
   "homepage": "https://github.com/audiojs/audio-speaker#readme",
   "dependencies": {
+    "assert": "^1.4.1",
     "audio-context": "^1.0.1",
     "audio-sink": "^1.1.6",
-    "debug": "^2.2.0",
-    "is-audio-buffer": "^1.0.1",
+    "is-audio-buffer": "^1.0.11",
     "is-browser": "^2.0.1",
-    "object-assign": "^4.1.0",
+    "object-assign": "^4.1.1",
     "pcm-util": "^3.0.0",
-    "web-audio-write": "^1.0.0"
+    "web-audio-write": "^1.1.0"
   },
   "devDependencies": {
     "audio-buffer-utils": "^5.0.1",
     "audio-generator": "^2.1.2",
     "audio-lena": "^2.1.0",
+    "eslint": "^4.0.0",
     "pcm-volume": "^1.0.0",
-    "pull-stream": "^3.5.0",
     "tape": "^4.6.3"
   },
   "optionalDependencies": {

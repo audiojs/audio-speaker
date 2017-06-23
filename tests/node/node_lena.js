@@ -1,8 +1,10 @@
-var test = require('tape')
+'use strict'
 
-var LenaBuffer = require('audio-lena/raw')
-var AudioSpeaker = require('../index')
+var test = require('tape').only
+
 var util = require('audio-buffer-utils')
+var LenaBuffer = require('audio-lena/raw')
+var AudioSpeaker = require('../../node')
 
 test('play audio once test', t => {
   var speaker = AudioSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })

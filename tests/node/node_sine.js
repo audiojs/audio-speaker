@@ -1,7 +1,9 @@
+'use strict'
+
 var test = require('tape')
 
 var AudioGenerator = require('audio-generator/index')
-var AudioSpeaker = require('../index')
+var AudioSpeaker = require('../../node')
 
 test('play sine for 4 seconds', t => {
   var generate = AudioGenerator(time => {

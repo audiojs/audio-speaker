@@ -1,14 +1,20 @@
 /** @module  audio-speaker/browser */
 'use strict'
 
-var createWriter = require('web-audio-write')
+var objectAssign = require('object-assign')
 var createContext = require('audio-context')
+var createWriter = require('web-audio-write')
 
 module.exports = function createSpeaker (opts) {
-  opts = opts || {}
+  var options = {}
 
-  var ctx = opts.context || createContext(opts)
-  var write = createWriter(ctx.destination, opts)
+  options = objectAssign({
+    channels: 1,
+    sampleRate: 44100
+  }, opts)
+
+  var ctx = options.context || createContext(options)
+  var write = createWriter(ctx.destination, options)
 
   return write
 }

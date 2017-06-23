@@ -1,3 +1,5 @@
+'use strict'
+
 var test = require('tape')
 
 test('check for build output', function(t) {

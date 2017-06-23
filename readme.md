@@ -15,7 +15,7 @@ Browser: `npm install audio-speaker --no-optional`
 
 Accepts options in main function:
 
- - channels (default 2)
+ - channels (default 1)
  - sampleRate (default 44100)
  - endianess (default 'LE')
  - bitDepth (default 16)

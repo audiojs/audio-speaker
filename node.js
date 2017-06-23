@@ -1,14 +1,13 @@
 /** @module  audio-speaker/index */
-
 'use strict'
 
 var os = require('os')
-var objectAssign = require('object-assign')
-var binding = require('audio-mpg123')
 var pcm = require('pcm-util')
-var isAudioBuffer = require('is-audio-buffer')
+var assert = require('assert')
+var binding = require('audio-mpg123')
+var objectAssign = require('object-assign')
 var audioSink = require('audio-sink/direct')
-var debug = require('debug')('speaker')
+var isAudioBuffer = require('is-audio-buffer')
 
 var endianess = 'function' == os.endianess ? os.endianess() : 'LE'
 
@@ -24,7 +23,8 @@ module.exports = Speaker
  * @api public
  */
 function Speaker (opts) {
-  debug('Speaker()')
+  assert(opts, 'Pass options into speaker')
+
   var options = {}
 
   options = objectAssign({
@@ -58,17 +58,16 @@ function Speaker (opts) {
     if(!success) {
       throw new Error('Failed to create the audio handler.')
     } else {
-      debug('_create() audio handle successfully.')
+      assert(binding, 'Audio handler created')
     }
   })
 
   if (options.handler !== null) {
-    debug('_start(%o)', Object.keys(options))
     binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
       if (!success) {
         throw new Error('Could not start the audio output with these properties.')
       } else {
-        debug('Created and started handler successfully.')
+        assert(options, 'Audio handler options applied')
       }
     })
   }
@@ -92,11 +91,10 @@ function Speaker (opts) {
    * @api public
    */
   function write (chunk, callback) {
-    debug('write()')
-    if (options._closed) return debug('write() cannot be called after the speaker is closed.')
+    if (options._closed) return assert(chunk, 'Write cannot occur after the speaker is closed')
 
     if (chunk && options._busy) {
-      debug('write() cannot be called until the previous buffer has been written.')
+      assert(chunk, 'Write cannot occur until the previous chunk is processed')
       callback(new Error('Could not write chunk as the buffer was busy.'), 0)
     }
 
@@ -114,21 +112,18 @@ function Speaker (opts) {
         var output = queue.length > options.chunkSize ? queue.slice(0, options.chunkSize) : queue
         var remaining = queue.length > options.chunkSize ? queue.slice(options.chunkSize, queue.length) : new Buffer(0)
 
-        binding.write(options.handler, output, output.length, onWrite)
-
-        function onWrite (written) {
+        binding.write(options.handler, output, output.length, (written) => {
           if(!remaining.length < 1) {
             next(null, remaining, callback)
           } else {
-            debug('Finished writing chunk.')
+            assert(written, 'Finished writing chunk')
             if (options.autoFlush && remaining.length < options.chunkSize) {
-              debug('Flushing the audio output.')
               binding.flush(options.handler, function (success) {
                 if (success != 1) {
                   options._busy = false
                   callback(new Error('Could not flush the audio output.'), written)
                 } else {
-                  debug('Flushed audio successfully.')
+                  assert(chunk, 'Finished flushing chunk')
                   options._busy = false
                   callback(null, written)
                 }
@@ -138,14 +133,12 @@ function Speaker (opts) {
               callback(null, written)
             }
           }
-        }
+        })
       }
     }
   }
 
   function sink (callback) {
-    debug('sink()')
-
     return audioSink((data, callback) => {
       if (options._closed) return callback(true)
       setTimeout(callback, options.samplesPerFrame / options.sampleRate)
@@ -164,16 +157,15 @@ function Speaker (opts) {
    * @api public
    */
   function end (flush, callback) {
-    debug('end(%o)', flush)
-    if (options._closed) return debug('_end() was called more than once. Already ended.')
+    if (options._closed) return assert(flush, 'Closing the speaker cannot occur after the speaker is already closed')
 
     if (options.handler) {
       if (flush) {
-        debug('Flushing the audio output.')
         binding.flush(options.handler, function (success) {
           if (success != 1) {
             callback(new Error('Could not flush the audio output.'))
           } else {
+            assert(flush, 'Finished flushing chunk')
             return close(callback)
           }
         })
@@ -185,10 +177,14 @@ function Speaker (opts) {
     }
 
     function close (callback) {
-      debug('close()')
       binding.close(options.handler, (success) => {
         if (callback) {
-          success ? callback() : callback(new Error('Failed to close speaker.'))
+          if (success != 1) {
+            callback(new Error('Failed to close speaker.'))
+          } else {
+            assert(options.handler, 'Closed speaker')
+            callback()
+          }
         }
       })
       options._closed = true
