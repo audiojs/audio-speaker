@@ -30,36 +30,28 @@ function Speaker (opts) {
     samplesPerFrame: 1024,
     sampleRate: 44100,
     endianess: endianess,
-    autoFlush: false
+    autoFlush: true
   }, opts)
 
-  if (options.handler) {
-    throw new Error('_create() was called more than once. Only one handler should exist.')
-  }
+  if (options.handler) throw new Error('Speaker was called more than once. Only one handler should exist.')
 
   options._closed = false
   options._busy = false
 
   var format = Speaker.getFormat(options)
-  if (format === null) {
-    throw new Error('Invalid format options.')
-  }
+  if (!format) throw new Error('Invalid format options.')
 
   options.blockAlign = options.bitDepth / 8 * options.channels
 
   options.chunkSize = options.blockAlign * options.samplesPerFrame
 
   options.handler = binding.create((success) => {
-    if(!success) {
-      throw new Error('Failed to create the audio handler.')
-    }
+    if(!success) throw new Error('Failed to create the audio handler.')
   })
 
   if (options.handler !== null) {
-    binding.open(options.handler, options.sampleRate, options.channels, format, function (success) {
-      if (!success) {
-        throw new Error('Could not start the audio output with these properties.')
-      }
+    binding.open(options.handler, options.sampleRate, options.channels, format, (success) => {
+      if (!success) throw new Error('Could not start the audio output with these properties.')
     })
   }
 
@@ -85,10 +77,7 @@ function Speaker (opts) {
     if (!callback) callback = noop
 
     if (options._closed) return callback(new Error('Write cannot occur after the speaker is closed.'))
-
-    if (chunk && options._busy) {
-      callback(new Error('Cannot write chunk as the buffer was busy.'))
-    }
+    if (chunk && options._busy) callback(new Error('Write cannot occur until the speaker has cleared its buffer.'))
 
     next(chunk, null, callback)
 
@@ -110,11 +99,10 @@ function Speaker (opts) {
           } else {
             if (options.autoFlush && remaining.length < options.chunkSize) {
               binding.flush(options.handler, function (success) {
-                if (success != 1) {
-                  options._busy = false
-                  callback(new Error('Could not flush the audio output.'))
+                options._busy = false
+                if (!success) {
+                  callback('Could not flush the audio output.')
                 } else {
-                  options._busy = false
                   callback(null)
                 }
               })
@@ -140,53 +128,40 @@ function Speaker (opts) {
   /**
    * The end function closes the speaker and stops
    * it from writing anymore data. The output data
-   * that was already written can be optionally flushed.
+   * that was already written will be flushed if the
+   * auto flush option is set.
    * NOTE: You cannot write anymore data after closing the speaker.
    *
-   * @param {Boolean} flush flushes the written data (default is false)
-   * @param {Function} callback callback with error parameter
    * @return void
    * @api public
    */
-  function end (flush, callback) {
-    if (options._closed) return callback(new Error('Closing the speaker cannot occur after the speaker is already closed.'))
+  function end () {
+    if (options._closed) return
 
     if (options.handler) {
-      if (flush) {
-        binding.flush(options.handler, function (success) {
-          if (success != 1) {
-            callback(new Error('Could not flush the audio output.'))
-          } else {
-            return close(callback)
-          }
+      if (options.autoFlush) {
+        binding.flush(options.handler, (success) => {
+          if (!success) throw new Error('Could not flush the audio output.')
+          return close()
         })
       } else {
-        return close(callback)
+        return close()
       }
     } else {
-      callback(new Error('Could not flush the audio output. Handler was deleted or not created.'))
+      throw new Error('Audio handler was not initialized.')
     }
 
-    function close (callback) {
+    function close () {
       binding.close(options.handler, (success) => {
-        if (callback) {
-          if (success != 1) {
-            callback(new Error('Failed to close speaker.'))
-          } else {
-            callback()
-          }
-        }
+        if (!success) throw new Error('Could not close the speaker.')
+        options._closed = true
+        options.handler = null
       })
-      options._closed = true
-      options.handler = null
     }
   }
 }
 
-// TODO: Temporary until browser has fixed ending callback.
-Speaker.platform = 'node'
-
-Speaker.getFormat = function getFormat (format) {
+Speaker.getFormat = (format) => {
   var f = null;
   if (format.bitDepth == 32 && format.float && format.signed) {
     f = binding.MPG123_ENC_FLOAT_32;

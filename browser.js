@@ -20,6 +20,3 @@ function Speaker (opts) {
 
   return write
 }
-
-// TODO: Temporary until browser has fixed ending callback.
-Speaker.platform = 'browser'
