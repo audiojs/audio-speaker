@@ -8,50 +8,72 @@ var createSpeaker = require('./')
 var createGenerator = require('audio-generator/direct')
 
 
-test('output audio buffer', t => {
+test('play noise', t => {
   var write = createSpeaker()
 
   let buffer = util.create(10000)
   util.noise(buffer)
 
   write(buffer, (err) => {
-    if (err) t.fail()
-    t.end()
+    if (err) {
+      t.error(err, 'Write callback caught an unexpected error.')
+    } else {
+      if (createSpeaker.platform === 'node') {
+        write.end(true, (err) => {
+          err ? t.error(err) : t.pass('Output successful.')
+          t.end()
+        })
+      } else {
+        t.end()
+      }
+    }
   })
 })
 
 
 test('play lena', t => {
-  var speaker = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: true })
+  var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
   var buf = util.create(LenaBuffer)
-  buf = util.slice(buf, 0, 44100)
 
-  speaker(buf, (err, chunk) => {
-    if (err) t.fail(err)
-    // speaker.end(false, (err) => {
-    //   err ? t.error(err) : t.pass('Output successful.')
-    // })
-    t.end()
+  write(buf, (err) => {
+    if (err) {
+      t.error(err, 'Write callback caught an unexpected error.')
+    } else {
+      if (createSpeaker.platform === 'node') {
+        write.end(true, (err) => {
+          err ? t.error(err) : t.pass('Output successful.')
+          t.end()
+        })
+      } else {
+        t.end()
+      }
+    }
   })
 })
 
 
-test('autoflush', t => {
-  var speaker = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
+test('play lena autoflush', t => {
+  var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: true })
   var buf = util.create(LenaBuffer)
-  buf = util.slice(buf, 0, 44100)
 
-  speaker(buf, (err, chunk) => {
-    if (err) t.fail(err)
-    // speaker.end(true, (err) => {
-    //   err ? t.error(err) : t.pass('Output successful.')
-    // })
-    t.end()
+  write(buf, (err) => {
+    if (err) {
+      t.error(err, 'Write callback caught an unexpected error.')
+    } else {
+      if (createSpeaker.platform === 'node') {
+        write.end(false, (err) => {
+          err ? t.error(err) : t.pass('Output successful.')
+          t.end()
+        })
+      } else {
+        t.end()
+      }
+    }
   })
 })
 
 
-test('play sine for 4 seconds', t => {
+test('play sine', t => {
   var generate = createGenerator(time => {
     return Math.sin(Math.PI * 2 * time * 440)
   }, { duration: 4 })
@@ -59,18 +81,23 @@ test('play sine for 4 seconds', t => {
   var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true });
 
   setTimeout(() => {
-    write.end(false, (err) => {
-      if (err) t.fail(err)
+    if (createSpeaker.platform === 'node') {
+      write.end(false, (err) => {
+        err ? t.error(err) : t.pass('Output successful.')
+        t.end()
+      })
+    } else {
       t.end()
-    })
+    }
   }, 1000);
 
-  (function loop (err, chunk) {
-    if (err || chunk < 1) {
+  (function loop (err) {
+    if (err) {
+      // Ignore errors as we are intentionally cutting this short.
       return
     } else {
-      write(generate(), (err, chunk) => {
-        loop(err, chunk)
+      write(generate(), (err) => {
+        loop(err)
       })
     }
   })();

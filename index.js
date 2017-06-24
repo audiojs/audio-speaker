@@ -87,7 +87,7 @@ function Speaker (opts) {
     if (options._closed) return callback(new Error('Write cannot occur after the speaker is closed.'))
 
     if (chunk && options._busy) {
-      callback(new Error('Cannot write chunk as the buffer was busy.'), 0)
+      callback(new Error('Cannot write chunk as the buffer was busy.'))
     }
 
     next(chunk, null, callback)
@@ -112,20 +112,20 @@ function Speaker (opts) {
               binding.flush(options.handler, function (success) {
                 if (success != 1) {
                   options._busy = false
-                  callback(new Error('Could not flush the audio output.'), written)
+                  callback(new Error('Could not flush the audio output.'))
                 } else {
                   options._busy = false
-                  callback(null, written)
+                  callback(null)
                 }
               })
             } else {
               options._busy = false
-              callback(null, written)
+              callback(null)
             }
           }
         })
       } else {
-        callback(new Error('Could not write remaining chunks as the speaker is closed.'), 0)
+        callback(new Error('Could not write remaining chunks as the speaker is closed.'))
       }
     }
   }
@@ -182,6 +182,9 @@ function Speaker (opts) {
     }
   }
 }
+
+// TODO: Temporary until browser has fixed ending callback.
+Speaker.platform = 'node'
 
 Speaker.getFormat = function getFormat (format) {
   var f = null;

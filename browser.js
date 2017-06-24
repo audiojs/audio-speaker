@@ -5,7 +5,9 @@ var objectAssign = require('object-assign')
 var createContext = require('audio-context')
 var createWriter = require('web-audio-write')
 
-module.exports = function createSpeaker (opts) {
+module.exports = Speaker
+
+function Speaker (opts) {
   var options = {}
 
   options = objectAssign({
@@ -18,3 +20,6 @@ module.exports = function createSpeaker (opts) {
 
   return write
 }
+
+// TODO: Temporary until browser has fixed ending callback.
+Speaker.platform = 'browser'
