@@ -48,12 +48,9 @@ Accepts the options:
  - `autoFlush` (default `true`)
  - `channels` (default `1`)
  - `sampleRate` (default `44100`)
- - `bitDepth` (default `16`)
- - `signed` (default `true`)
- - `float` (default `false`)
- - `endianess` (default `'LE'`)
+ - `format` (default: `int16 le`)
 
-Returns a speaker funciton you can use to write `AudioBuffer`s. 
+Returns a speaker funciton you can use to write `AudioBuffer`s.
 
 ```js
 var speaker = createSpeaker()

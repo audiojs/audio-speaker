@@ -31,14 +31,13 @@
     "audio-context": "^1.0.1",
     "is-audio-buffer": "^1.0.11",
     "object-assign": "^4.1.1",
-    "pcm-util": "^3.0.0",
+    "pcm-convert": "^1.0.0",
     "web-audio-write": "^1.2.1"
   },
   "devDependencies": {
     "audio-buffer-utils": "^5.0.1",
     "audio-generator": "^2.1.2",
     "audio-lena": "^2.1.0",
-    "eslint": "^4.0.0",
     "pcm-volume": "^1.0.0",
     "tape": "^4.6.3"
   },

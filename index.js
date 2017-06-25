@@ -1,13 +1,10 @@
 /** @module  audio-speaker/index */
 'use strict'
 
-var os = require('os')
-var pcm = require('pcm-util')
+var convert = require('pcm-convert')
 var binding = require('audio-mpg123')
 var isAudioBuffer = require('is-audio-buffer')
 function noop () {}
-
-var endianess = os.endianness() || 'LE'
 
 module.exports = Speaker
 
@@ -23,16 +20,13 @@ module.exports = Speaker
 function Speaker (opts) {
   var options = Object.assign({
     channels: 1,
-    float: false,
-    bitDepth: 16,
-    signed: true,
+    format: 'float32',
     samplesPerFrame: 1024,
     sampleRate: 44100,
-    endianess: endianess,
     autoFlush: true
   }, opts)
 
-  var format = Speaker.getFormat(options)
+  var format = Speaker.getFormat(options.format)
   if (!format) throw new Error('Invalid format options.')
 
   // Options we use directly
@@ -75,15 +69,33 @@ function Speaker (opts) {
     if (!handler) return callback(new Error('Write occurred after the speaker closed.'))
     if (busy) return callback(new Error('Write occurred before the speaker flushed.'))
 
+    //make sure audio buffer is converted to proper format
+    if (isAudioBuffer(buf)) {
+      if (buf._data) buf = buf._data
+      else {
+        var arr = new Float32Array(buf.length * buf.numberOfChannels)
+        for (var c = 0, l = buf.length; c < buf.numberOfChannels; c++) {
+          arr.set(buf.getChannelData(c), c*l)
+        }
+        buf = arr
+      }
+
+      buf = Buffer.from(convert(buf, {
+          dtype: 'float32',
+          interleaved: false,
+          channels: buf.numberOfChannels
+        }, {
+          dtype: options.format
+        })
+      )
+    }
+
     next(buf, null, callback)
 
     function next (chunk, rest, callback) {
       if (handler) {
         busy = true
-        
-        // TODO: Remove once binding takes ArrayBuffer directly
-        if (chunk) chunk = isAudioBuffer(chunk) ? Buffer.from(pcm.toArrayBuffer(chunk, options)) : chunk
-        if (rest) rest = isAudioBuffer(rest) ? Buffer.from(pcm.toArrayBuffer(rest, options)) : rest 
+
         var queue = !rest || !rest.length ? chunk : Buffer.concat([rest, chunk])
         if (!queue) queue = new Buffer(0) // meh
 
@@ -133,29 +145,30 @@ function Speaker (opts) {
   }
 }
 
-Speaker.getFormat = (format) => {
-  var f = null;
-  if (format.bitDepth == 32 && format.float && format.signed) {
-    f = binding.MPG123_ENC_FLOAT_32;
-  } else if (format.bitDepth == 64 && format.float && format.signed) {
-    f = binding.MPG123_ENC_FLOAT_64;
-  } else if (format.bitDepth == 8 && format.signed) {
-    f = binding.MPG123_ENC_SIGNED_8;
-  } else if (format.bitDepth == 8 && !format.signed) {
-    f = binding.MPG123_ENC_UNSIGNED_8;
-  } else if (format.bitDepth == 16 && format.signed) {
-    f = binding.MPG123_ENC_SIGNED_16;
-  } else if (format.bitDepth == 16 && !format.signed) {
-    f = binding.MPG123_ENC_UNSIGNED_16;
-  } else if (format.bitDepth == 24 && format.signed) {
-    f = binding.MPG123_ENC_SIGNED_24;
-  } else if (format.bitDepth == 24 && !format.signed) {
-    f = binding.MPG123_ENC_UNSIGNED_24;
-  } else if (format.bitDepth == 32 && format.signed) {
-    f = binding.MPG123_ENC_SIGNED_32;
-  } else if (format.bitDepth == 32 && !format.signed) {
-    f = binding.MPG123_ENC_UNSIGNED_32;
+Speaker.getFormat = function (format) {
+  switch (format) {
+    case 'uint8':
+    case 'uint8_clamped':
+      return binding.MPG123_ENC_UNSIGNED_8;
+    case 'uint16':
+      return binding.MPG123_ENC_UNSIGNED_16;
+    case 'uint24':
+      return binding.MPG123_ENC_UNSIGNED_24;
+    case 'uint32':
+      return binding.MPG123_ENC_UNSIGNED_32;
+    case 'int8':
+      return binding.MPG123_ENC_SIGNED_8;
+    case 'int16':
+      return binding.MPG123_ENC_SIGNED_16;
+    case 'int24':
+      return binding.MPG123_ENC_SIGNED_24;
+    case 'int32':
+      return binding.MPG123_ENC_SIGNED_32;
+    case 'array':
+    case 'float32':
+      return binding.MPG123_ENC_FLOAT_32;
+    case 'float64':
+      return binding.MPG123_ENC_FLOAT_64;
   }
-  return f;
 }
 

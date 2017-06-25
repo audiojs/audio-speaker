@@ -27,11 +27,12 @@ test('play noise', t => {
 })
 
 
-test('play lena', t => {
+test.only('play lena', t => {
   t.plan(1)
 
   var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
   var buf = util.create(LenaBuffer)
+  buf = util.slice(buf, 1)
 
   write(buf, (err) => {
     if (err) {
@@ -48,7 +49,7 @@ test('play sine', t => {
 
   var generate = createGenerator(time => {
     return Math.sin(Math.PI * 2 * time * 440)
-  }, { duration: 4 })
+  }, { duration: 1 })
 
   var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: false });
 
@@ -62,7 +63,8 @@ test('play sine', t => {
       // Ignore errors as we are intentionally cutting this short.
       return
     } else {
-      write(generate(), loop)
+      let buf = generate()
+      write(buf, loop)
     }
   })();
 })
