@@ -73,8 +73,8 @@ function Speaker (opts) {
     if (isAudioBuffer(buf)) {
       if (buf._data) buf = buf._data
       else {
-        var arr = new Float32Array(buf.length * buf.numberOfChannels)
-        for (var c = 0, l = buf.length; c < buf.numberOfChannels; c++) {
+        var arr = new Float32Array(buf.length * channels)
+        for (var c = 0, l = buf.length; c < channels; c++) {
           arr.set(buf.getChannelData(c), c*l)
         }
         buf = arr
@@ -83,11 +83,10 @@ function Speaker (opts) {
       buf = Buffer.from(convert(buf, {
           dtype: 'float32',
           interleaved: false,
-          channels: buf.numberOfChannels,
-          endianness: 'le'
+          channels: channels
         }, {
-          endianness: 'le',
-          dtype: options.format
+          dtype: options.format,
+          interleaved: true
         }).buffer
       )
     }

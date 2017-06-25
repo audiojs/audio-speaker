@@ -48,10 +48,13 @@ test('play sine', t => {
   t.plan(1)
 
   var generate = createGenerator(time => {
-    return Math.sin(Math.PI * 2 * time * 440)
-  }, { duration: 1, channels: 1 })
+    return [
+      Math.sin(Math.PI * 2 * time * 439),
+      Math.sin(Math.PI * 2 * time * 441)
+    ]
+  }, { duration: 1, channels: 2 })
 
-  var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: false });
+  var write = createSpeaker({ channels: 2, autoFlush: false });
 
   setTimeout(() => {
     write.end()
