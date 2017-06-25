@@ -20,8 +20,8 @@ module.exports = Speaker
 function Speaker (opts) {
   var options = Object.assign({
     channels: 1,
-    sampleRate: 44100,
     format: 'int16',
+    sampleRate: 44100,
     autoFlush: true
   }, opts)
 
@@ -32,6 +32,7 @@ function Speaker (opts) {
   var channels = options.channels
   var sampleRate = options.sampleRate
   var autoFlush = options.autoFlush
+  var chunkSize = NaN//1024
 
   // Writing state
   var busy = false
@@ -92,31 +93,29 @@ function Speaker (opts) {
     next(buf, null, callback)
 
     function next (chunk, rest, callback) {
-      if (handler) {
-        busy = true
+      if (!handler) return callback(new Error('Speaker closed while writing'))
 
-        var queue = !rest || !rest.length ? chunk : Buffer.concat([rest, chunk])
-        if (!queue) queue = new Buffer(0) // meh
+      busy = true
 
-        var output = queue.length > chunkSize ? queue.slice(0, chunkSize) : queue
-        var remaining = queue.length > chunkSize ? queue.slice(chunkSize, queue.length) : new Buffer(0)
+      var queue = !rest || !rest.length ? chunk : Buffer.concat([rest, chunk])
+      if (!queue) queue = new Buffer(0) // meh
 
-        binding.write(handler, output, output.length, (written) => {
-          // Play next chunk
-          if (rest && rest.length) return next(null, remaining, callback)
-          // Stream finished. Flush and callback
-          var err = null
-          if (autoFlush) {
-            binding.flush(handler, (success) => {
-              if (!success) err = new Error('Flushing speaker failed')
-            })
-          }
-          busy = false
-          callback(err)
-        })
-      } else {
-        callback(new Error('Speaker closed while writing'))
-      }
+      var output = queue.length > chunkSize ? queue.slice(0, chunkSize) : queue
+      var remaining = queue.length > chunkSize ? queue.slice(chunkSize, queue.length) : new Buffer(0)
+
+      binding.write(handler, output, output.length, (written) => {
+        // Play next chunk
+        if (rest && rest.length) return next(null, remaining, callback)
+        // Stream finished. Flush and callback
+        var err = null
+        if (autoFlush) {
+          binding.flush(handler, (success) => {
+            if (!success) err = new Error('Flushing speaker failed')
+          })
+        }
+        busy = false
+        callback(err)
+      })
     }
   }
 
