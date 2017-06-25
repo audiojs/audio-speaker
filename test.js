@@ -62,9 +62,7 @@ test('play sine', t => {
       // Ignore errors as we are intentionally cutting this short.
       return
     } else {
-      write(generate(), (err) => {
-        loop(err)
-      })
+      write(generate(), loop)
     }
   })();
 })
