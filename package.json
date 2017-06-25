@@ -22,6 +22,10 @@
     "native"
   ],
   "author": "Connor Hartley (https://github.com/connorhartley)",
+  "contributors": [
+    "Jamen Marz <jamenmarz+gh@gmail.com>",
+    "Dima Yv <df.creative@gmail.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/audiojs/audio-speaker/issues"

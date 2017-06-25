@@ -1,17 +1,12 @@
+# audio-speaker [![unstable](https://img.shields.io/badge/stability-unstable-green.svg)](http://github.com/badges/stability-badges) [![Build Status](https://img.shields.io/travis/audiojs/audio-speaker.svg)](https://travis-ci.org/audiojs/audio-speaker) [![Greenkeeper badge](https://badges.greenkeeper.io/audiojs/audio-speaker.svg)](https://greenkeeper.io/)
 
-# audio-speaker
-
-> Write audio to the speaker in node/browser
-
-[![Build Status](https://api.travis-ci.org/audiojs/audio-speaker.svg?branch=release-2.0)](https://travis-ci.org/audiojs/audio-speaker) [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
-
-Write [AudioBuffers](https://github.com/audiojs/audio-buffer) to the speaker in node or browser.
+Write [AudioBuffer](https://github.com/audiojs/audio-buffer)/ArrayBuffer/ArrayBufferView/Buffer to the speaker in node or browser.
 
 ```js
 var generator = require('audio-generator')
 var speaker = require('audio-speaker')
 
-// Create a sine wave:
+// Create a 440Hz sine wave
 var sine = generator(time => {
   return Math.sin(PI * 2 * time * 440)
 })
@@ -21,15 +16,8 @@ var sine = generator(time => {
 })()
 ```
 
-(See more examples in [`test`](test.js))
+See more examples in [`test`](test.js).
 
-## Packages
-
-If you need some other way to write to speaker, here is a list of implementations:
-
- - [`audio-speaker`](https://github.com/audiojs/audio-speaker) for a plain function (this module)
- - [`audio-speaker-stream`](https://github.com/audiojs/audio-speaker-stream) for use with [Node streams](https://nodejs.org/api/stream.html)
- - [`pull-audio-speaker`](https://github.com/audiojs/pull-audio-speaker) for a [pull-stream](https://github.com/pull-stream/pull-stream) sink function
 
 ## Install
 
@@ -41,7 +29,7 @@ npm i audio-speaker
 
 ## Usage
 
-### `createSpeaker(options?)`
+### `let speaker = createSpeaker(options?)`
 
 Accepts the options:
 
@@ -54,7 +42,8 @@ Returns a speaker funciton you can use to write `AudioBuffer`s.
 
 ```js
 var speaker = createSpeaker()
-// Or with options:
+
+// Or with options
 var speaker = createSpeaker({ channels: 2, bitDepth: 8 })
 ```
 
@@ -70,10 +59,15 @@ write(sine(), err => {
 })
 ```
 
-## Also see
+## Related
 
- - [`web-audio-stream`](https://github.com/audiojs/web-audio-stream): Stream data to web-audio.<br/>
- - [`audio-through`](http://npmjs.org/package/audio-through): Universal stream for processing audio.<br/>
- - [`audio-feeder`](https://github.com/brion/audio-feeder): Cross-browser speaker for PCM data.<br/>
- - [`mpg123`](https://github.com/audiojs/mpg123): Fork of mpg123 made to suit audio-speaker.<br/>
+ - [`audio-speaker-stream`](https://github.com/audiojs/audio-speaker-stream) for use with [Node streams](https://nodejs.org/api/stream.html).
+ - [`pull-audio-speaker`](https://github.com/audiojs/pull-audio-speaker) for a [pull-stream](https://github.com/pull-stream/pull-stream) sink function.
+ - [`web-audio-stream`](https://github.com/audiojs/web-audio-stream): Stream data to web-audio.
+ - [`audio-through`](http://npmjs.org/package/audio-through): Universal stream for processing audio.
+ - [`audio-feeder`](https://github.com/brion/audio-feeder): Cross-browser speaker for PCM data.
+ - [`audio-mpg123`](https://github.com/audiojs/audio-mpg123): Fork of mpg123 made to suit audio-speaker.
 
+## License
+
+© 2017 AudioJS. MIT License
