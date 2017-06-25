@@ -49,7 +49,7 @@ test('play sine', t => {
 
   var generate = createGenerator(time => {
     return Math.sin(Math.PI * 2 * time * 440)
-  }, { duration: 1 })
+  }, { duration: 1, channels: 1 })
 
   var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true, autoFlush: false });
 
