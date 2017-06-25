@@ -20,9 +20,8 @@ module.exports = Speaker
 function Speaker (opts) {
   var options = Object.assign({
     channels: 1,
-    format: 'int16',
-    samplesPerFrame: 1024,
     sampleRate: 44100,
+    format: 'int16',
     autoFlush: true
   }, opts)
 
@@ -32,7 +31,6 @@ function Speaker (opts) {
   // Options we use directly
   var channels = options.channels
   var sampleRate = options.sampleRate
-  var chunkSize = options.blockAlign * options.samplesPerFrame
   var autoFlush = options.autoFlush
 
   // Writing state
