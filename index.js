@@ -86,9 +86,9 @@ function Speaker (opts) {
           channels: buf.numberOfChannels,
           endianness: 'le'
         }, {
-          endianness: 'be',
+          endianness: 'le',
           dtype: options.format
-        })
+        }).buffer
       )
     }
 
