@@ -20,7 +20,7 @@ module.exports = Speaker
 function Speaker (opts) {
   var options = Object.assign({
     channels: 1,
-    format: 'float32',
+    format: 'int16',
     samplesPerFrame: 1024,
     sampleRate: 44100,
     autoFlush: true
@@ -83,8 +83,10 @@ function Speaker (opts) {
       buf = Buffer.from(convert(buf, {
           dtype: 'float32',
           interleaved: false,
-          channels: buf.numberOfChannels
+          channels: buf.numberOfChannels,
+          endianness: 'le'
         }, {
+          endianness: 'be',
           dtype: options.format
         })
       )
