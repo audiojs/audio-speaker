@@ -27,12 +27,12 @@ test('play noise', t => {
 })
 
 
-test.only('play lena', t => {
+test('play lena', t => {
   t.plan(1)
 
   var write = createSpeaker({ channels: 1, float: false, bitDepth: 16, signed: true })
   var buf = util.create(LenaBuffer)
-  buf = util.slice(buf, 1)
+  buf = util.slice(buf, 0, 44100)
 
   write(buf, (err) => {
     if (err) {
@@ -56,7 +56,7 @@ test('play sine', t => {
   setTimeout(() => {
     write.end()
     t.pass('Output successful.')
-  }, 1000);
+  }, 500);
 
   (function loop (err) {
     if (err) {
