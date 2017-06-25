@@ -28,7 +28,7 @@ var sine = generator(time => {
 If you need some other way to write to speaker, here is a list of implementations:
 
  - [`audio-speaker`](https://github.com/audiojs/audio-speaker) for a plain function (this module)
- - [`audio-speaker-stream`](https://github.com/audiojs/pull-audio-speaker) for use with [Node streams](https://nodejs.org/api/stream.html)
+ - [`audio-speaker-stream`](https://github.com/audiojs/audio-speaker-stream) for use with [Node streams](https://nodejs.org/api/stream.html)
  - [`pull-audio-speaker`](https://github.com/audiojs/pull-audio-speaker) for a [pull-stream](https://github.com/pull-stream/pull-stream) sink function
 
 ## Install
