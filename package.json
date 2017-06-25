@@ -1,7 +1,7 @@
 {
   "name": "audio-speaker",
   "version": "2.0.0-5",
-  "description": "Output PCM data to a device or library.",
+  "description": "Write audio to the speaker in node/browser",
   "scripts": {
     "test": "node test",
     "test:browser": "budo test",
@@ -29,9 +29,7 @@
   "homepage": "https://github.com/audiojs/audio-speaker#readme",
   "dependencies": {
     "audio-context": "^1.0.1",
-    "audio-sink": "^1.1.6",
     "is-audio-buffer": "^1.0.11",
-    "is-browser": "^2.0.1",
     "object-assign": "^4.1.1",
     "pcm-util": "^3.0.0",
     "web-audio-write": "^1.2.1"

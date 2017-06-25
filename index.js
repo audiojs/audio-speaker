@@ -4,7 +4,7 @@
 var os = require('os')
 var pcm = require('pcm-util')
 var binding = require('audio-mpg123')
-var audioSink = require('audio-sink/direct')
+var isAudioBuffer = require('is-audio-buffer')
 function noop () {}
 
 var endianess = os.endianness() || 'LE'
@@ -38,7 +38,6 @@ function Speaker (opts) {
   // Options we use directly
   var channels = options.channels
   var sampleRate = options.sampleRate
-  var blockAlign = options.bitDepth / 8 * options.channels
   var chunkSize = options.blockAlign * options.samplesPerFrame
   var autoFlush = options.autoFlush
 
@@ -72,6 +71,7 @@ function Speaker (opts) {
    * @api public
    */
   function write (buf, callback) {
+    if (!callback) callback = noop
     if (!handler) return callback(new Error('Write occurred after the speaker closed.'))
     if (busy) return callback(new Error('Write occurred before the speaker flushed.'))
 
@@ -82,8 +82,8 @@ function Speaker (opts) {
         busy = true
         
         // TODO: Remove once binding takes ArrayBuffer directly
-        if (chunk) chunk = Buffer.from(pcm.toArrayBuffer(chunk, options))
-        if (rest) rest = Buffer.from(pcm.toArrayBuffer(rest, options))
+        if (chunk) chunk = isAudioBuffer(chunk) ? Buffer.from(pcm.toArrayBuffer(chunk, options)) : chunk
+        if (rest) rest = isAudioBuffer(rest) ? Buffer.from(pcm.toArrayBuffer(rest, options)) : rest 
         var queue = !rest || !rest.length ? chunk : Buffer.concat([rest, chunk])
         if (!queue) queue = new Buffer(0) // meh
 
