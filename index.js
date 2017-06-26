@@ -80,11 +80,11 @@ function Speaker (opts) {
       }
 
       buf = Buffer.from(convert(buf, {
-          dtype: 'float32',
+          type: 'float32',
           interleaved: false,
           channels: channels
         }, {
-          dtype: options.format,
+          type: options.format,
           interleaved: true
         }).buffer
       )
