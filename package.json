@@ -36,7 +36,7 @@
     "audio-buffer-utils": "^4.0.0",
     "audio-context": "^1.0.0",
     "audio-generator": "^2.0.1",
-    "eslint": "^3.4.0",
+    "eslint": "^4.1.0",
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
