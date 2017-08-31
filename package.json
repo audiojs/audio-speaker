@@ -46,7 +46,7 @@
   },
   "optionalDependencies": {
     "audio-sink": "^1.0.2",
-    "speaker": "^0.3.0"
+    "speaker": "^0.4.0"
   },
   "dependencies": {
     "audio-through": "^2.2.3",
