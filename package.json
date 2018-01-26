@@ -49,7 +49,7 @@
     "speaker": "^0.3.0"
   },
   "dependencies": {
-    "audio-through": "^2.2.3",
+    "audio-through": "^4.0.0",
     "inherits": "^2.0.1",
     "is-audio-buffer": "^1.0.1",
     "object-assign": "^4.1.1",
