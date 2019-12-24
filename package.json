@@ -45,16 +45,16 @@
     "wavefont": "^1.2.1"
   },
   "optionalDependencies": {
-    "audio-sink": "^1.0.2",
-    "speaker": "^0.3.0"
+    "audio-sink": "^1.1.6",
+    "speaker": "^0.5.1"
   },
   "dependencies": {
-    "audio-through": "^2.2.3",
-    "inherits": "^2.0.1",
-    "is-audio-buffer": "^1.0.1",
+    "audio-through": "^4.0.1",
+    "inherits": "^2.0.4",
+    "is-audio-buffer": "^1.1.0",
     "object-assign": "^4.1.1",
-    "pcm-util": "^2.1.0",
-    "pull-stream": "^3.4.5",
+    "pcm-util": "^3.0.0",
+    "pull-stream": "^3.6.14",
     "web-audio-stream": "^3.0.1"
   }
 }
