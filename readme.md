@@ -1,6 +1,6 @@
 # audio-speaker [![unstable](https://img.shields.io/badge/stability-unstable-green.svg)](http://github.com/badges/stability-badges) [![Build Status](https://img.shields.io/travis/audiojs/audio-speaker.svg)](https://travis-ci.org/audiojs/audio-speaker) [![Greenkeeper badge](https://badges.greenkeeper.io/audiojs/audio-speaker.svg)](https://greenkeeper.io/)
 
-Write [AudioBuffer](https://github.com/audiojs/audio-buffer) to the speaker in node or browser.
+Write audio data to speaker in node or browser.
 
 ```js
 var generator = require('audio-generator')
@@ -25,15 +25,14 @@ See more examples in [`test`](test.js).
 npm i audio-speaker
 ```
 
-**Note:** When only on browser you can use `--no-optional` to skip downloading the Node.js backend.
+**Note:** For browser-only usage `--no-optional` flag skips downloading node.js backend.
 
 ## Usage
 
-### `let speaker = createSpeaker(options?)`
+### `write = createSpeaker(options?)`
 
-Accepts the options:
+`options`:
 
- - `autoFlush` (default `true`)
  - `channels` (default `1`)
  - `sampleRate` (default `44100`)
 
@@ -46,7 +45,7 @@ var speaker = createSpeaker()
 var speaker = createSpeaker({ channels: 2, sampleRate: 48000 })
 ```
 
-### `speaker(buf, done?)`
+### `write(buf, done?)`
 
 Writes an `AudioBuffer` to the speaker and plays it back.
 
@@ -58,12 +57,6 @@ write(sine(), err => {
 })
 ```
 
-## Related
-
- - [`audio-speaker-stream`](https://github.com/audiojs/audio-speaker-stream) for use with [Node streams](https://nodejs.org/api/stream.html).
- - [`pull-audio-speaker`](https://github.com/audiojs/pull-audio-speaker) for a [pull-stream](https://github.com/pull-stream/pull-stream) sink function.
- - [`audio-mpg123`](https://github.com/audiojs/audio-mpg123): Fork of mpg123 made to suit audio-speaker.
-
 ## License
 
-© 2017 AudioJS. MIT License
+© 2020 AudioJS. MIT License

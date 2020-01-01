@@ -1,11 +1,8 @@
-'use strict'
-
-var test = require('tape')
-
-var util = require('audio-buffer-utils')
-var LenaBuffer = require('audio-lena/raw')
-var createSpeaker = require('./')
-var createGenerator = require('audio-generator/direct')
+import test from 'tst'
+import util from 'audio-buffer-utils'
+import LenaBuffer from 'audio-lena/raw'
+import createSpeaker from './index-old'
+import createGenerator from 'audio-generator/direct'
 
 
 test('play noise', t => {
