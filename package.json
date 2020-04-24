@@ -40,7 +40,7 @@
     "insert-styles": "^1.2.1",
     "pcm-util": "^2.0.2",
     "pcm-volume": "^1.0.0",
-    "tape": "^4.6.3",
+    "tape": "^5.0.0",
     "tst": "^1.1.8",
     "wavefont": "^1.2.1"
   },
