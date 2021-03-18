@@ -4,7 +4,6 @@
   "description": "Output audio data to speaker in browser/node",
   "main": "stream.js",
   "scripts": {
-    "preversion": "npm run lint && npm run test",
     "lint": "eslint *.js --ignore-pattern test*",
     "test:browser": "budo test.js",
     "test": "node test"
