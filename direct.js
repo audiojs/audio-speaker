@@ -8,7 +8,6 @@
 
 const pcm = require('pcm-util');
 const isAudioBuffer = require('is-audio-buffer');
-const extend = require('object-assign');
 
 const format = {
 	float: false,
@@ -30,7 +29,7 @@ catch (e) {
 
 
 module.exports = function (opts) {
-	opts = extend({}, format, opts);
+	opts = Object.assign({}, format, opts);
 
 	return opts.sink || !NodeSpeaker ? createSink(opts) : createSpeaker(opts);
 }

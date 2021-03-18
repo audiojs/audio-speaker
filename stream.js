@@ -7,7 +7,6 @@
 'use strict';
 
 var inherits = require('inherits');
-var extend = require('object-assign');
 var Through = require('audio-through');
 
 var NodeSpeaker;
@@ -46,7 +45,7 @@ inherits(AudioSpeaker, Through);
 /**
  * Predefined format for node-speaker
  */
-extend(AudioSpeaker.prototype, {
+Object.assign(AudioSpeaker.prototype, {
 	float: false,
 	interleaved: true,
 	bitDepth: 16,
