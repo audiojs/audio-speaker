@@ -173,7 +173,10 @@ if (!isBrowser) {
     await new Promise(resolve => speaker.on('close', resolve))
   })
 
-  test('capture: verify output matches input', async () => {
+  // capture tests require real audio device — skip in CI (null backend has different sample rate)
+  const isCI = !!process.env.CI
+
+  test('capture: verify output matches input', { skip: isCI }, async () => {
     const { open } = await import('./src/backends/miniaudio.js')
     const device = open({ sampleRate: 44100, channels: 1, bitDepth: 16, capture: true })
 
@@ -215,7 +218,7 @@ if (!isBrowser) {
     ok(crossings > 70 && crossings < 110, 'frequency check: ' + crossings + ' zero crossings (~88 expected)')
   })
 
-  test('capture: no discontinuities in long buffer', async () => {
+  test('capture: no discontinuities in long buffer', { skip: isCI }, async () => {
     const { open } = await import('./src/backends/miniaudio.js')
     const device = open({ sampleRate: 44100, channels: 1, bitDepth: 16, bufferSize: 100, capture: true })
 
