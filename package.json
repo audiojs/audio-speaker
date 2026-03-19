@@ -1,6 +1,6 @@
 {
   "name": "audio-speaker",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0",
   "description": "Output audio data to speaker in browser/node",
   "type": "module",
   "main": "./index.js",
@@ -19,8 +19,19 @@
   },
   "scripts": {
     "build": "node-gyp rebuild",
+    "prebuild": "prebuildify --napi",
     "test": "node test.js"
   },
+  "files": [
+    "index.js",
+    "stream.js",
+    "browser.js",
+    "src/",
+    "native/speaker.c",
+    "native/miniaudio.h",
+    "binding.gyp",
+    "prebuilds/"
+  ],
   "gypfile": true,
   "repository": {
     "type": "git",
@@ -36,7 +47,7 @@
     "sink",
     "miniaudio"
   ],
-  "author": "Dima Yv <dfcreative@gmail.com>",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/audiojs/audio-speaker/issues"
@@ -45,11 +56,15 @@
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {},
   "optionalDependencies": {
-    "@picovoice/pvspeaker-node": "^1.0.0"
+    "@audio/speaker-darwin-arm64": "2.0.0",
+    "@audio/speaker-darwin-x64": "2.0.0",
+    "@audio/speaker-linux-x64": "2.0.0",
+    "@audio/speaker-linux-arm64": "2.0.0",
+    "@audio/speaker-win32-x64": "2.0.0"
   },
   "devDependencies": {
+    "prebuildify": "^6.0.1",
     "tst": "^9.3.0"
   }
 }

@@ -1,7 +1,7 @@
 /**
  * Backend detection — tries backends in priority order
  */
-const backends = ['pvspeaker', 'miniaudio', 'process']
+const backends = ['miniaudio', 'process']
 
 export async function open(opts, preference) {
   const order = preference ? [preference] : backends
@@ -18,8 +18,7 @@ export async function open(opts, preference) {
   }
 
   throw new Error(
-    'No audio backend available. ' +
-    'Install @picovoice/pvspeaker-node or compile the native addon (npm run build).' +
+    'No audio backend available. Install @audio/speaker-* for your platform or run npm run build.' +
     (lastErr ? ` Last error: ${lastErr.message}` : '')
   )
 }

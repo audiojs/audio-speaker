@@ -4,6 +4,7 @@
  * Browser audio output via Web Audio API.
  */
 export default function Speaker(opts = {}) {
+  const ownCtx = !opts.context
   const ctx = opts.context || new AudioContext({
     sampleRate: opts.sampleRate || 44100
   })
@@ -38,12 +39,15 @@ export default function Speaker(opts = {}) {
 
     for (let ch = 0; ch < channels; ch++) {
       const out = audioBuffer.getChannelData(ch)
-      for (let i = 0; i < frameCount; i++) {
-        const idx = (i * channels + ch) * bytesPerSample
-        if (bitDepth === 16) {
+      if (bitDepth === 16) {
+        for (let i = 0; i < frameCount; i++) {
+          const idx = (i * channels + ch) * 2
           out[i] = ((chunk[idx] | (chunk[idx + 1] << 8)) << 16 >> 16) / 32768
-        } else if (bitDepth === 32) {
-          out[i] = new Float32Array(chunk.buffer, chunk.byteOffset + idx, 1)[0]
+        }
+      } else if (bitDepth === 32) {
+        const f32 = new DataView(chunk.buffer, chunk.byteOffset, chunk.byteLength)
+        for (let i = 0; i < frameCount; i++) {
+          out[i] = f32.getFloat32((i * channels + ch) * 4, true)
         }
       }
     }
@@ -58,6 +62,6 @@ export default function Speaker(opts = {}) {
   function close() {
     if (closed) return
     closed = true
-    ctx.close?.()
+    if (ownCtx) ctx.close?.()
   }
 }

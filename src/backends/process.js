@@ -6,7 +6,7 @@ import { platform } from 'node:os'
 
 function findPlayer(sampleRate, channels, bitDepth) {
   const os = platform()
-  const fmt = `s${bitDepth}le`
+  const fmt = bitDepth === 8 ? 'u8' : bitDepth === 32 ? 'f32le' : `s${bitDepth}le`
 
   // ffplay: best cross-platform option, handles stdin PCM
   try {

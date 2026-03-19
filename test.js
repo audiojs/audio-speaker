@@ -9,15 +9,19 @@ const { default: Speaker } = await import(isBrowser ? './browser.js' : './index.
 
 const open = (opts) => isBrowser ? Speaker(opts) : Speaker(opts)
 
-// generate PCM sine — snaps to full periods to avoid click at end
+// generate PCM sine with fade in/out to avoid clicks
+const FADE_MS = 5
 function sine(freq, durationMs, { sampleRate = 44100, channels = 2, bitDepth = 16 } = {}) {
   const bps = bitDepth / 8
-  const period = sampleRate / freq
-  const frames = Math.round(durationMs / 1000 * sampleRate / period) * Math.round(period)
+  const frames = Math.round(durationMs / 1000 * sampleRate)
+  const fadeFrames = Math.min(Math.round(FADE_MS / 1000 * sampleRate), frames / 2)
   const buf = new Uint8Array(frames * channels * bps)
   const view = new DataView(buf.buffer)
   for (let i = 0; i < frames; i++) {
-    const val = Math.sin(2 * Math.PI * freq * i / sampleRate)
+    let val = Math.sin(2 * Math.PI * freq * i / sampleRate)
+    // fade envelope
+    if (i < fadeFrames) val *= i / fadeFrames
+    else if (i >= frames - fadeFrames) val *= (frames - 1 - i) / fadeFrames
     const sample = Math.max(-32768, Math.min(32767, Math.round(val * 32767)))
     for (let ch = 0; ch < channels; ch++) {
       view.setInt16((i * channels + ch) * bps, sample, true)
@@ -92,6 +96,12 @@ test('22050Hz sample rate', async () => {
   await play(write, sine(440, 100, opts))
 })
 
+test('96kHz sample rate', async () => {
+  const opts = { sampleRate: 96000 }
+  const write = await open(opts)
+  await play(write, sine(440, 100, opts))
+})
+
 test('different frequencies', async () => {
   const write = await open()
   for (const freq of [220, 440, 880, 1760]) {
@@ -152,6 +162,104 @@ if (!isBrowser) {
     const write = await Speaker({ backend: 'miniaudio' })
     is(write.backend, 'miniaudio')
     await play(write, sine(440, 50))
+  })
+
+  test('stream: destroy mid-playback', async () => {
+    const { default: SpeakerStream } = await import('./stream.js')
+    const speaker = new SpeakerStream()
+    speaker.write(sine(440, 100))
+    speaker.destroy()
+    // should not throw or hang
+    await new Promise(resolve => speaker.on('close', resolve))
+  })
+
+  test('capture: verify output matches input', async () => {
+    const { open } = await import('./src/backends/miniaudio.js')
+    const device = open({ sampleRate: 44100, channels: 1, bitDepth: 16, capture: true })
+
+    // write a known 440Hz sine
+    const frames = 4410 // 100ms
+    const buf = sine(440, 100, { channels: 1 })
+
+    await new Promise((resolve, reject) => {
+      device.write(buf, (err) => {
+        if (err) return reject(err)
+        device.flush(() => resolve())
+      })
+    })
+
+    // read captured output
+    const capBuf = Buffer.alloc(frames * 2) // 1ch × 16-bit
+    const capFrames = device.read(capBuf)
+    device.close()
+
+    ok(capFrames > 0, 'captured ' + capFrames + ' frames')
+
+    // verify signal: captured samples should match input (non-silence)
+    let maxSample = 0
+    for (let i = 0; i < capFrames; i++) {
+      const sample = Math.abs(capBuf.readInt16LE(i * 2))
+      if (sample > maxSample) maxSample = sample
+    }
+    ok(maxSample > 1000, 'captured signal is non-silent (max=' + maxSample + ')')
+
+    // verify correlation: compare input and captured waveforms
+    // they should be identical (input → ring buffer → playback → capture)
+    let matchCount = 0
+    const compareFrames = Math.min(capFrames, frames)
+    for (let i = 0; i < compareFrames; i++) {
+      const input = buf[i * 2] | (buf[i * 2 + 1] << 8)
+      const output = capBuf[i * 2] | (capBuf[i * 2 + 1] << 8)
+      if (input === output) matchCount++
+    }
+    const matchRatio = matchCount / compareFrames
+    ok(matchRatio > 0.9, 'output matches input (' + (matchRatio * 100).toFixed(1) + '% match)')
+  })
+
+  test('capture: no discontinuities in long buffer', async () => {
+    const { open } = await import('./src/backends/miniaudio.js')
+    const device = open({ sampleRate: 44100, channels: 1, bitDepth: 16, bufferSize: 100, capture: true })
+
+    // 1s sine — long enough to wrap around ring buffer multiple times
+    const durationMs = 1000
+    const sampleRate = 44100
+    const freq = 440
+    const frames = Math.round(durationMs / 1000 * sampleRate)
+    const buf = Buffer.alloc(frames * 2)
+    for (let i = 0; i < frames; i++) {
+      const val = Math.sin(2 * Math.PI * freq * i / sampleRate)
+      buf.writeInt16LE(Math.max(-32768, Math.min(32767, Math.round(val * 32767))), i * 2)
+    }
+
+    await new Promise((resolve, reject) => {
+      device.write(buf, (err) => {
+        if (err) return reject(err)
+        device.flush(() => resolve())
+      })
+    })
+
+    // read all captured output
+    const capBuf = Buffer.alloc(frames * 2)
+    const capFrames = device.read(capBuf)
+    device.close()
+
+    ok(capFrames > frames * 0.9, 'captured enough frames: ' + capFrames + '/' + frames)
+
+    // detect discontinuities: adjacent samples shouldn't jump more than expected
+    // max delta for 440Hz sine at 44100Hz: sin changes by ~2π×440/44100 per sample ≈ 0.0627
+    // in int16: ~0.0627 × 32767 ≈ 2055. Allow 3x margin for safety.
+    const maxAllowedDelta = 2055 * 3
+    let glitches = 0
+    let maxDelta = 0
+    for (let i = 1; i < capFrames; i++) {
+      const prev = capBuf.readInt16LE((i - 1) * 2)
+      const curr = capBuf.readInt16LE(i * 2)
+      const delta = Math.abs(curr - prev)
+      if (delta > maxDelta) maxDelta = delta
+      if (delta > maxAllowedDelta) glitches++
+    }
+
+    ok(glitches === 0, glitches + ' discontinuities found (max delta=' + maxDelta + ')')
   })
 
   test('AudioBuffer input', async () => {

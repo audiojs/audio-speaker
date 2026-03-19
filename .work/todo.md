@@ -1,42 +1,45 @@
 # v2
 
 ## Phase 1: Native miniaudio addon
-* [x] Vendor miniaudio.h (single header, stripped with MA_NO_* flags)
+* [x] Vendor miniaudio.h v0.11.25 (single header, stripped with MA_NO_* flags)
 * [x] Write speaker.c — N-API addon with ring buffer (open/write/flush/close)
 * [x] Write binding.gyp — platform-conditional link flags
 * [x] Test native addon standalone (371KB binary, 440Hz sine plays clean)
 * [x] GC finalizer for safe cleanup
-* [ ] Prebuild binaries (macOS x64+arm64, Linux x64+arm64, Windows x64)
 
 ## Phase 2: Backend abstraction
 * [x] Backend interface (open/write/flush/close)
 * [x] src/backends/pvspeaker.js — @picovoice/pvspeaker-node wrapper
-* [x] src/backends/miniaudio.js — our addon wrapper
+* [x] src/backends/miniaudio.js — our addon wrapper with retry on full ring buffer
 * [x] src/backends/process.js — sox/ffplay/aplay fallback
 * [x] src/backend.js — cascade tries open(), falls through on failure
 
 ## Phase 3: Public API + ESM
-* [x] index.js — ESM, async Speaker(opts) → write(chunk, cb)
-* [x] stream.js — ESM, standard Node Writable
-* [x] browser.js — ESM, Web Audio API (standalone, no web-audio-stream dep)
+* [x] index.js — ESM, async Speaker(opts) → write(chunk, cb), zero runtime deps
+* [x] stream.js — ESM, standard Node Writable with destroy safety
+* [x] browser.js — ESM, Web Audio API with autoplay resume, context ownership
 * [x] package.json — "type": "module", exports map, engines >=18
 * [x] Configurable buffer size (default 50ms)
-* [ ] Backpressure: bind to real-time, don't generate more than needed
+* [x] AudioBuffer detection + PCM conversion inlined
 
-## Phase 4: Cleanup
-* [x] Remove audio-through, inherits, pull-stream, speaker, audio-sink deps
-* [x] Remove pull.js, cli.js, browser-direct.js, browser-stream.js, direct.js
-* [x] Remove .travis.yml, .eslintrc.json
+## Phase 4: Cleanup + distribution
+* [x] Remove all old deps (audio-through, inherits, pull-stream, speaker, audio-sink, etc.)
+* [x] Remove dead files
 * [x] Modernize .gitignore
-* [ ] Update readme
+* [x] Update readme
+* [x] Platform packages: @audio/speaker-{platform}-{arch} (esbuild-style)
+* [x] Prebuildify for mac arm64
+* [x] Loader: @audio pkg → prebuilds/ → build/
 
 ## Phase 5: Tests + CI
-* [x] Tests pass (7/7) — direct API, stream API, backend selection
-* [x] Mono playback, 48kHz sample rate tested
-* [ ] Test format conversion (float32↔int16)
-* [ ] Test variety of channels (4, 6)
-* [ ] Test different sample rates (22050, 96000)
-* [ ] Test stream backpressure
-* [ ] Test end/close/destroy lifecycle
-* [ ] Browser tests via tst
-* [ ] GitHub Actions CI matrix (macOS/Linux/Windows × Node 18/20/22)
+* [x] 16/16 tests pass — tst framework, same test.js for browser+node
+* [x] Fade envelope on test sine (no clicks)
+* [x] Formats: mono, stereo, 22050/44100/48000/96000 Hz
+* [x] Lifecycle: double close, destroy mid-playback, write after flush
+* [x] AudioBuffer input (float32→int16 conversion)
+* [x] Browser tests via tst (test.html, manual run on user gesture)
+* [x] GitHub Actions CI: test matrix (3 OS × 3 Node) + prebuild workflow
+
+## Remaining
+* [ ] Build and publish platform packages for all 5 platforms
+* [ ] Backpressure: expose ring buffer pressure to stream highWaterMark

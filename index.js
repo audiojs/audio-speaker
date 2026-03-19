@@ -54,8 +54,7 @@ export default async function Speaker(opts) {
 
   function write(chunk, cb) {
     if (chunk == null) {
-      device.flush(() => device.close())
-      cb?.(null)
+      device.flush(() => { device.close(); cb?.(null) })
       return
     }
 

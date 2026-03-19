@@ -1,67 +1,88 @@
-# audio-speaker [![Build Status](https://travis-ci.org/audiojs/audio-speaker.svg?branch=master)](https://travis-ci.org/audiojs/audio-speaker) [![stable](https://img.shields.io/badge/stability-stable-brightgreen.svg)](http://github.com/badges/stability-badges) [![Greenkeeper badge](https://badges.greenkeeper.io/audiojs/audio-speaker.svg)](https://greenkeeper.io/)
+# audio-speaker
 
-Output audio stream to speaker in node or browser.
+Output audio data to speaker in node or browser.
 
-[![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
-
-
-### Use as a stream
+## Usage
 
 ```js
-var Speaker = require('audio-speaker/stream');
-var Generator = require('audio-generator/stream');
+import Speaker from 'audio-speaker'
 
-Generator(function (time) {
-	//panned unisson effect
-	var τ = Math.PI * 2;
-	return [Math.sin(τ * time * 441), Math.sin(τ * time * 439)];
+const write = await Speaker({
+  sampleRate: 44100,
+  channels: 2,
+  bitDepth: 16,
+  // bufferSize: 50,           // ring buffer ms (default 50)
+  // backend: 'miniaudio',     // force backend: 'pvspeaker', 'miniaudio', 'process'
 })
-.pipe(Speaker({
-	//PCM input format defaults, optional.
-	//channels: 2,
-	//sampleRate: 44100,
-	//byteOrder: 'LE',
-	//bitDepth: 16,
-	//signed: true,
-	//float: false,
-	//interleaved: true,
-}));
+
+write(pcmBuffer, (err) => {
+  // ready for next chunk
+})
+write(null) // end playback
 ```
 
-### Use as a pull-stream
+### Stream
 
 ```js
-const pull = require('pull-stream/pull');
-const speaker = require('audio-speaker/pull');
-const osc = require('audio-oscillator/pull');
+import SpeakerStream from 'audio-speaker/stream'
 
-pull(osc({frequency: 440}), speaker());
+source.pipe(new SpeakerStream({ sampleRate: 44100, channels: 2 }))
 ```
 
-### Use directly
+### Browser
 
-Speaker is [async-sink](https://github.com/audiojs/contributing/wiki/Streams-convention) with `fn(data, cb)` notation.
+Bundlers automatically resolve to the Web Audio API backend via the `browser` field.
 
 ```js
-const createSpeaker = require('audio-speaker');
-const createGenerator = require('audio-generator');
+import Speaker from 'audio-speaker'
 
-let output = createSpeaker();
-let generate = createGenerator(t => Math.sin(t * Math.PI * 2 * 440));
-
-(function loop (err, buf) {
-	let buffer = generate();
-	output(buffer, loop);
-})();
+const write = Speaker({ sampleRate: 44100, channels: 2 })
+write(pcmBuffer, (err, frames) => {})
 ```
 
+## Backends
 
-## Alternatives
+Backends are tried in order; first successful one wins.
 
-- [node-web-audio-api](https://github.com/ircam-ismm/node-web-audio-api) — Full W3C Web Audio in Node via Rust/cpal
-- [@picovoice/pvspeaker-node](https://github.com/Picovoice/pvspeaker) — miniaudio PCM output
-- [audify](https://github.com/almogh52/audify) — RtAudio N-API (stale)
-- [naudiodon](https://github.com/Streampunk/naudiodon) — PortAudio streams (semi-active)
-- [@kmamal/sdl](https://github.com/kmamal/node-sdl) — SDL2 full binding (active)
-- [speaker](https://github.com/TooTallNate/node-speaker) — mpg123 output (stale, build issues)
-- [play-sound](https://www.npmjs.com/package/play-sound) — Process-based file playback
+| Backend | How | Latency | Install |
+|---|---|---|---|
+| `pvspeaker` | [@picovoice/pvspeaker-node](https://github.com/Picovoice/pvspeaker) (miniaudio, prebuilt) | Low | `npm i @picovoice/pvspeaker-node` |
+| `miniaudio` | Own N-API addon wrapping [miniaudio.h](https://github.com/mackron/miniaudio) | Low | `npm run build` (needs C compiler) |
+| `process` | Pipes PCM to ffplay/sox/aplay | High | System tool must be installed |
+| `webaudio` | Web Audio API (browser only) | Low | Built-in |
+
+## API
+
+### `write = await Speaker(opts?)`
+
+Returns an async sink function. Options:
+
+- `sampleRate` — default `44100`
+- `channels` — default `2`
+- `bitDepth` — `8`, `16` (default), `24`, `32`
+- `bufferSize` — ring buffer in ms, default `50`
+- `backend` — force a specific backend
+
+### `write(buffer, cb?)`
+
+Write PCM data. Accepts `Buffer`, `Uint8Array`, or `AudioBuffer`. Callback fires when ready for next chunk.
+
+### `write(null)`
+
+End playback. Flushes remaining audio then closes device.
+
+### `write.flush(cb?)`
+
+Wait for buffered audio to finish playing.
+
+### `write.close()`
+
+Immediately close the audio device.
+
+### `write.backend`
+
+Name of the active backend (`'miniaudio'`, `'pvspeaker'`, `'process'`, `'webaudio'`).
+
+## License
+
+MIT
