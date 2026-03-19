@@ -17,3 +17,8 @@ jobs:
       - run: npm install --ignore-scripts
       - run: npx node-gyp@latest rebuild
       - run: npm test
+      - if: matrix.node == 22
+        uses: actions/upload-artifact@v4
+        with:
+          name: speaker-${{ matrix.os }}
+          path: build/Release/speaker.node
