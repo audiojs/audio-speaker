@@ -55,9 +55,13 @@ let generate = createGenerator(t => Math.sin(t * Math.PI * 2 * 440));
 })();
 ```
 
-#### Related
 
-> [web-audio-stream](https://github.com/audiojs/web-audio-stream) — stream data to web-audio.<br/>
-> [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
-> [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
-> [audio-feeder](https://github.com/brion/audio-feeder) — cross-browser speaker for pcm data.<br/>
+## Alternatives
+
+- [node-web-audio-api](https://github.com/ircam-ismm/node-web-audio-api) — Full W3C Web Audio in Node via Rust/cpal
+- [@picovoice/pvspeaker-node](https://github.com/Picovoice/pvspeaker) — miniaudio PCM output
+- [audify](https://github.com/almogh52/audify) — RtAudio N-API (stale)
+- [naudiodon](https://github.com/Streampunk/naudiodon) — PortAudio streams (semi-active)
+- [@kmamal/sdl](https://github.com/kmamal/node-sdl) — SDL2 full binding (active)
+- [speaker](https://github.com/TooTallNate/node-speaker) — mpg123 output (stale, build issues)
+- [play-sound](https://www.npmjs.com/package/play-sound) — Process-based file playback

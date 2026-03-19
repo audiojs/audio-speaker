@@ -106,3 +106,4 @@ tmp
 bundle.*
 build
 _demo
+/.claude
