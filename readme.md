@@ -46,10 +46,21 @@ Backends are tried in order; first successful one wins.
 
 | Backend | How | Latency | Install |
 |---|---|---|---|
-| `pvspeaker` | [@picovoice/pvspeaker-node](https://github.com/Picovoice/pvspeaker) (miniaudio, prebuilt) | Low | `npm i @picovoice/pvspeaker-node` |
-| `miniaudio` | Own N-API addon wrapping [miniaudio.h](https://github.com/mackron/miniaudio) | Low | `npm run build` (needs C compiler) |
+| `miniaudio` | N-API addon wrapping [miniaudio.h](https://github.com/mackron/miniaudio) | Low | Prebuilt via `@audio/speaker-*` packages |
 | `process` | Pipes PCM to ffplay/sox/aplay | High | System tool must be installed |
 | `webaudio` | Web Audio API (browser only) | Low | Built-in |
+
+Prebuilt binaries are shipped as optional platform packages (like esbuild):
+
+| Platform | Package |
+|---|---|
+| macOS arm64 | `@audio/speaker-darwin-arm64` |
+| macOS x64 | `@audio/speaker-darwin-x64` |
+| Linux x64 | `@audio/speaker-linux-x64` |
+| Linux arm64 | `@audio/speaker-linux-arm64` |
+| Windows x64 | `@audio/speaker-win32-x64` |
+
+If no prebuilt is available, falls back to compiling from source via `node-gyp` (requires C compiler).
 
 ## API
 
@@ -82,6 +93,39 @@ Immediately close the audio device.
 ### `write.backend`
 
 Name of the active backend (`'miniaudio'`, `'pvspeaker'`, `'process'`, `'webaudio'`).
+
+## Building
+
+```sh
+npm run build          # compile native addon locally
+npm test               # run tests
+npm run prebuild       # create prebuildify archive
+```
+
+### Platform binaries
+
+From the repo root (`audio-speaker`), build for each target:
+
+```sh
+# macOS arm64 (native)
+npx node-gyp@latest rebuild
+
+# macOS x64 (cross-compile on arm64 mac)
+npx node-gyp@latest rebuild --arch=x64
+
+# Linux x64 / arm64 (Docker)
+docker run --rm --platform linux/amd64 \
+  -v $(pwd):/src:ro -v /tmp/out:/out node:22-slim bash -c '
+    apt-get update -qq && apt-get install -y -qq python3 make g++ > /dev/null 2>&1
+    cp -r /src /build && cd /build
+    npx node-gyp@latest rebuild 2>&1 | tail -3
+    cp build/Release/speaker.node /out/'
+
+# Windows x64 (via GitHub Actions — push, download artifact)
+gh run download <run-id> --name speaker-windows-latest
+```
+
+Copy each `speaker.node` to its platform package repo, commit, push, publish.
 
 ## License
 
