@@ -6,5 +6,5 @@
 * [x] Stream (Writable), browser (Web Audio API)
 * [x] Platform packages: @audio/speaker-{platform}-{arch} (5 platforms built)
 * [x] Tests: 18 pass, tst (browser+node), CI green (3 OS × 3 Node)
-* [ ] Publish to npm
-* [ ] Backpressure: expose ring buffer pressure to stream highWaterMark
+* [x] Publish to npm
+* [x] Backpressure: expose ring buffer pressure to stream highWaterMark

@@ -96,6 +96,18 @@ test('22050Hz sample rate', async () => {
   await play(write, sine(440, 100, opts))
 })
 
+test('4 channels', async () => {
+  const opts = { channels: 4 }
+  const write = await open(opts)
+  await play(write, sine(440, 100, opts))
+})
+
+test('6 channels (5.1)', async () => {
+  const opts = { channels: 6 }
+  const write = await open(opts)
+  await play(write, sine(440, 100, opts))
+})
+
 test('96kHz sample rate', async () => {
   const opts = { sampleRate: 96000 }
   const write = await open(opts)
@@ -140,6 +152,27 @@ test('write after flush', async () => {
 // --- Node-only ---
 
 if (!isBrowser) {
+  test('stream: highWaterMark matches ring buffer', async () => {
+    const { default: SpeakerStream } = await import('./stream.js')
+    const speaker = new SpeakerStream({ sampleRate: 44100, channels: 2, bitDepth: 16, bufferSize: 50 })
+    // 50ms × 44100Hz × 2ch × 2bytes = 8820 bytes
+    is(speaker.writableHighWaterMark, 8820)
+    speaker.destroy()
+    await new Promise(resolve => speaker.on('close', resolve))
+  })
+
+  test('backpressure: write blocks until ring buffer drains', async () => {
+    const write = await Speaker({ bufferSize: 50 })
+    // write 500ms of audio into 50ms buffer — should take ~500ms (real-time)
+    const bigBuf = sine(440, 500)
+    const start = performance.now()
+    await new Promise((resolve, reject) => {
+      write(bigBuf, (err) => err ? reject(err) : write.flush(() => { write.close(); resolve() }))
+    })
+    const elapsed = performance.now() - start
+    ok(elapsed > 400, 'write took ' + elapsed.toFixed(0) + 'ms (expected ~500ms)')
+  })
+
   test('stream: pipe writable', async () => {
     const { default: SpeakerStream } = await import('./stream.js')
     const { Readable } = await import('node:stream')

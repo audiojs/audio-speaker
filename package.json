@@ -4,12 +4,15 @@
   "description": "Output audio data to speaker in browser/node",
   "type": "module",
   "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
+      "types": "./index.d.ts",
       "browser": "./browser.js",
       "default": "./index.js"
     },
     "./stream": {
+      "types": "./stream.d.ts",
       "browser": "./browser.js",
       "default": "./stream.js"
     }
@@ -24,8 +27,11 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "stream.js",
+    "stream.d.ts",
     "browser.js",
+    "browser.d.ts",
     "src/",
     "native/speaker.c",
     "native/miniaudio.h",

@@ -8,7 +8,9 @@ import Speaker from './index.js'
 
 export default class SpeakerStream extends Writable {
   constructor(opts) {
-    super()
+    const { sampleRate = 44100, channels = 2, bitDepth = 16, bufferSize = 50 } = opts || {}
+    // highWaterMark matches ring buffer: don't accumulate more than one buffer ahead
+    super({ highWaterMark: Math.round(sampleRate * channels * (bitDepth / 8) * bufferSize / 1000) })
     this._opts = opts
     this._write_fn = null
     this._closed = false
