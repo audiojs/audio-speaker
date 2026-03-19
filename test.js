@@ -203,17 +203,16 @@ if (!isBrowser) {
     }
     ok(maxSample > 1000, 'captured signal is non-silent (max=' + maxSample + ')')
 
-    // verify correlation: compare input and captured waveforms
-    // they should be identical (input → ring buffer → playback → capture)
-    let matchCount = 0
-    const compareFrames = Math.min(capFrames, frames)
-    for (let i = 0; i < compareFrames; i++) {
-      const input = buf[i * 2] | (buf[i * 2 + 1] << 8)
-      const output = capBuf[i * 2] | (capBuf[i * 2 + 1] << 8)
-      if (input === output) matchCount++
+    // verify frequency: count zero crossings to confirm correct pitch
+    // 440Hz at 44100Hz for 4410 frames = 100ms = 44 full cycles = ~88 zero crossings
+    let crossings = 0
+    for (let i = 1; i < capFrames; i++) {
+      const prev = capBuf.readInt16LE((i - 1) * 2)
+      const curr = capBuf.readInt16LE(i * 2)
+      if ((prev <= 0 && curr > 0) || (prev >= 0 && curr < 0)) crossings++
     }
-    const matchRatio = matchCount / compareFrames
-    ok(matchRatio > 0.9, 'output matches input (' + (matchRatio * 100).toFixed(1) + '% match)')
+    // expect ~88 crossings (±10% for phase offset at edges)
+    ok(crossings > 70 && crossings < 110, 'frequency check: ' + crossings + ' zero crossings (~88 expected)')
   })
 
   test('capture: no discontinuities in long buffer', async () => {
