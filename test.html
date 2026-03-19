@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+<head><title>audio-speaker tests</title></head>
+<body>
+<button id="run">Run Tests</button>
+<script type="module">
+import test from './node_modules/tst/tst.js'
+await import('./test.js')
+document.getElementById('run').onclick = () => {
+  document.getElementById('run').remove()
+  test.run()
+}
+</script>
+</body>
+</html>

@@ -1,190 +1,174 @@
-'use strict';
+import test from 'tst'
+import { ok, is } from 'tst'
 
-var Speaker = require('./stream');
-var Generator = require('audio-generator/stream');
-var Generate = require('audio-generator/index');
-var Readable = require('stream').Readable;
-var util = require('audio-buffer-utils');
-var pcm = require('pcm-util');
-var Through = require('audio-through');
-Through.log = true;
-var Volume = require('pcm-volume');
-var test = require('tape')
-var SpeakerWriter = require('./direct');
-var pull = require('pull-stream');
-var PullSpeaker = require('./pull');
-var pullGenerator = require('audio-generator/pull');
+const isBrowser = typeof window !== 'undefined'
 
+if (isBrowser) test.manual = true
 
-require('insert-styles')(`
-	@font-face {
-		font-family: wavefont;
-		src: url(./wavefont.otf) format("opentype");
-	}
-`);
+const { default: Speaker } = await import(isBrowser ? './browser.js' : './index.js')
 
-test('Pure function', function (t) {
-	let generate = Generate(t => {
-		return Math.sin(t * Math.PI * 2 * 440);
-	}, 1);
+const open = (opts) => isBrowser ? Speaker(opts) : Speaker(opts)
 
-	let write = SpeakerWriter();
+// generate PCM sine — snaps to full periods to avoid click at end
+function sine(freq, durationMs, { sampleRate = 44100, channels = 2, bitDepth = 16 } = {}) {
+  const bps = bitDepth / 8
+  const period = sampleRate / freq
+  const frames = Math.round(durationMs / 1000 * sampleRate / period) * Math.round(period)
+  const buf = new Uint8Array(frames * channels * bps)
+  const view = new DataView(buf.buffer)
+  for (let i = 0; i < frames; i++) {
+    const val = Math.sin(2 * Math.PI * freq * i / sampleRate)
+    const sample = Math.max(-32768, Math.min(32767, Math.round(val * 32767)))
+    for (let ch = 0; ch < channels; ch++) {
+      view.setInt16((i * channels + ch) * bps, sample, true)
+    }
+  }
+  return isBrowser ? buf : Buffer.from(buf.buffer)
+}
 
-	(function loop (err, buf) {
-		if (err) return write(null);
-		write(generate(buf), loop)
-	})();
+// helper: write + flush + close
+function play(write, buf) {
+  return new Promise((resolve, reject) => {
+    write(buf, (err) => {
+      if (err) return reject(err)
+      write.flush(() => { write.close(); resolve() })
+    })
+  })
+}
 
-	setTimeout(() => {
-		write(null);
-		t.end();
-	}, 200);
-});
+// --- core ---
 
-test('Pull stream', function (t) {
-	let out = PullSpeaker();
+test('play sine', async () => {
+  const write = await open()
+  ok(write.backend, 'has backend')
+  await play(write, sine(440, 100))
+})
 
-	pull(
-		pullGenerator(time => 2 * time * 440 - 1, {frequency: 440}),
-		out
-	);
+test('null ends playback', async () => {
+  const write = await open()
+  await new Promise((resolve, reject) => {
+    write(sine(440, 50), (err) => {
+      if (err) return reject(err)
+      write(null, () => resolve())
+    })
+  })
+})
 
-	setTimeout(() => {
-		out.abort();
-		t.end();
-	}, 500);
-});
+test('multiple chunks', async () => {
+  const write = await open()
+  const chunk = sine(660, 25)
+  let n = 0
+  await new Promise((resolve, reject) => {
+    ;(function next() {
+      if (n >= 4) return write.flush(() => { write.close(); resolve() })
+      write(chunk, (err) => { if (err) return reject(err); n++; next() })
+    })()
+  })
+  is(n, 4)
+})
 
-test('Cleanness of wave', function (t) {
-	Through(function (buffer) {
-		var self = this;
-		util.fill(buffer, function (sample, idx, channel) {
-			return Math.sin(Math.PI * 2 * (self.count + idx) * 440 / 44100);
-		});
+test('double close is safe', async () => {
+  const write = await open()
+  await play(write, sine(440, 30))
+  write.close() // second close — should not throw
+})
 
-		if (this.time > 2) return this.end();
+// --- formats ---
 
-		return buffer;
-	})
-	.on('end', function () {
-		t.end()
-	})
-	.pipe(Speaker())
-	// .pipe(WAASteam(context.destination));
-});
+test('mono', async () => {
+  const write = await open({ channels: 1 })
+  await play(write, sine(880, 100, { channels: 1 }))
+})
 
-test('Feed audio-through', function (t) {
-	Generator({
-		generate: function (time) {
-			return [
-				Math.sin(Math.PI * 2 * time * 538 ) / 5,
-				Math.sin(Math.PI * 2 * time * 542 ) / 5
-				// Math.random()
-			]
-		},
-		duration: .4
-	})
-	.on('end', function () {t.end()})
-	.pipe(Speaker())
-});
+test('48kHz', async () => {
+  const opts = { sampleRate: 48000 }
+  const write = await open(opts)
+  await play(write, sine(440, 100, opts))
+})
 
-test('Feed raw pcm', function (t) {
-	var count = 0;
-	Readable({
-		read: function (size) {
-			var abuf = util.create(1024, 2, 44100);
+test('22050Hz sample rate', async () => {
+  const opts = { sampleRate: 22050 }
+  const write = await open(opts)
+  await play(write, sine(440, 100, opts))
+})
 
-			//EGG: swap ch & i and hear wonderful sfx
-			util.fill(abuf, function (v, i, ch) {
-				v = Math.sin(Math.PI * 2 * ((count + i)/44100) * (738 + ch*2) ) / 5;
-				return v;
-			});
+test('different frequencies', async () => {
+  const write = await open()
+  for (const freq of [220, 440, 880, 1760]) {
+    await new Promise((resolve, reject) => {
+      write(sine(freq, 50), (err) => err ? reject(err) : resolve())
+    })
+  }
+  write.flush(() => write.close())
+})
 
-			count += 1024;
+// --- edge cases ---
 
-			if (count > 1e4 ) return this.push(null);
+test('small buffer (single period)', async () => {
+  const write = await open()
+  // ~2ms of 440Hz = ~1 period
+  await play(write, sine(440, 5))
+})
 
-			let buf = pcm.toBuffer(abuf);
+test('large buffer (1s)', async () => {
+  const write = await open()
+  await play(write, sine(440, 1000))
+})
 
-			this.push(buf);
-		}
-	})
-	.on('end', function () {t.end()})
-	.pipe(Speaker({
-		channels: 2
-	}))
-});
+test('write after flush', async () => {
+  const write = await open()
+  await new Promise((resolve, reject) => {
+    write(sine(440, 50), (err) => {
+      if (err) return reject(err)
+      write.flush(() => resolve())
+    })
+  })
+  // write more after flush
+  await play(write, sine(660, 50))
+})
 
-//FIXME: use transform stream here to send floats data to speaker
-test.skip('Feed custom pcm', function (t) {
-	var count = 0;
-	Readable({
-		// objectMode: 1,
-		read: function (size) {
-			var abuf = util.create(1024, 2, 44100);
+// --- Node-only ---
 
-			util.fill(abuf, function (v, i, ch) {
-				return Math.sin(Math.PI * 2 * ((count + i)/44100) * (938 + ch*2) );
-			});
+if (!isBrowser) {
+  test('stream: pipe writable', async () => {
+    const { default: SpeakerStream } = await import('./stream.js')
+    const { Readable } = await import('node:stream')
+    const { pipeline } = await import('node:stream/promises')
 
-			count += 1024;
+    const chunk = sine(440, 25)
+    let n = 0
+    const source = new Readable({
+      read() {
+        if (n >= 4) return this.push(null)
+        this.push(chunk)
+        n++
+      }
+    })
 
-			if (count > 1e4 ) return this.push(null);
+    await pipeline(source, new SpeakerStream())
+  })
 
-			let buf = pcm.toBuffer(abuf, {
-				float: true
-			});
+  test('explicit miniaudio backend', async () => {
+    const write = await Speaker({ backend: 'miniaudio' })
+    is(write.backend, 'miniaudio')
+    await play(write, sine(440, 50))
+  })
 
-			this.push(buf);
-		}
-	})
-	.on('end', function () {t.end()})
-	.pipe(Speaker({
-		channels: 2,
+  test('AudioBuffer input', async () => {
+    // simulate AudioBuffer with getChannelData/numberOfChannels/length
+    const frames = 4410
+    const data = new Float32Array(frames)
+    for (let i = 0; i < frames; i++) {
+      data[i] = Math.sin(2 * Math.PI * 440 * i / 44100)
+    }
+    const ab = {
+      numberOfChannels: 1,
+      sampleRate: 44100,
+      length: frames,
+      getChannelData: () => data
+    }
 
-		//EGG: comment this and hear wonderful sfx
-		float: true
-	}))
-});
-
-test.skip('Feed random buffer size');
-
-test('Volume case', function (t) {
-	//TODO: fix the case!
-	Generator(function (time) {
-			return [
-				Math.sin(Math.PI * 2 * time * 1038 ) / 5,
-				Math.sin(Math.PI * 2 * time * 1042 ) / 5
-			];
-		}, {
-		duration: 1
-	})
-	.on('end', function () {t.end()})
-	.pipe(Volume(5))
-	.pipe(Speaker())
-});
-
-
-
-
-//little debigger
-if (typeof document !== 'undefined') {
-	var el = document.body.appendChild(document.createElement('div'));
-	el.style.cssText = `
-	font-family: wavefont;
-	max-width: 100vw;
-	word-break: break-all;
-	white-space: pre-wrap;
-	font-size: 32px;
-	`;
-
-	function draw (arr) {
-		let str = '';
-
-		for (let i = 0; i < arr.length; i++) {
-			str += String.fromCharCode(0x200 + Math.floor(arr[i] * 128 * 5));
-		}
-
-		el.innerHTML += '\n' + str;
-	}
+    const write = await Speaker({ channels: 1 })
+    await play(write, ab)
+  })
 }
