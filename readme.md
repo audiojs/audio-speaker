@@ -1,63 +1,132 @@
-# audio-speaker [![Build Status](https://travis-ci.org/audiojs/audio-speaker.svg?branch=master)](https://travis-ci.org/audiojs/audio-speaker) [![stable](https://img.shields.io/badge/stability-stable-brightgreen.svg)](http://github.com/badges/stability-badges) [![Greenkeeper badge](https://badges.greenkeeper.io/audiojs/audio-speaker.svg)](https://greenkeeper.io/)
+# audio-speaker
 
-Output audio stream to speaker in node or browser.
+Output audio data to speaker in node or browser.
 
-[![npm install audio-speaker](https://nodei.co/npm/audio-speaker.png?mini=true)](https://npmjs.org/package/audio-speaker/)
-
-
-### Use as a stream
+## Usage
 
 ```js
-var Speaker = require('audio-speaker/stream');
-var Generator = require('audio-generator/stream');
+import Speaker from 'audio-speaker'
 
-Generator(function (time) {
-	//panned unisson effect
-	var τ = Math.PI * 2;
-	return [Math.sin(τ * time * 441), Math.sin(τ * time * 439)];
+const write = await Speaker({
+  sampleRate: 44100,
+  channels: 2,
+  bitDepth: 16,
+  // bufferSize: 50,           // ring buffer ms (default 50)
+  // backend: 'miniaudio',     // force backend: 'pvspeaker', 'miniaudio', 'process'
 })
-.pipe(Speaker({
-	//PCM input format defaults, optional.
-	//channels: 2,
-	//sampleRate: 44100,
-	//byteOrder: 'LE',
-	//bitDepth: 16,
-	//signed: true,
-	//float: false,
-	//interleaved: true,
-}));
+
+write(pcmBuffer, (err) => {
+  // ready for next chunk
+})
+write(null) // end playback
 ```
 
-### Use as a pull-stream
+### Stream
 
 ```js
-const pull = require('pull-stream/pull');
-const speaker = require('audio-speaker/pull');
-const osc = require('audio-oscillator/pull');
+import SpeakerStream from 'audio-speaker/stream'
 
-pull(osc({frequency: 440}), speaker());
+source.pipe(new SpeakerStream({ sampleRate: 44100, channels: 2 }))
 ```
 
-### Use directly
+### Browser
 
-Speaker is [async-sink](https://github.com/audiojs/contributing/wiki/Streams-convention) with `fn(data, cb)` notation.
+Bundlers automatically resolve to the Web Audio API backend via the `browser` field.
 
 ```js
-const createSpeaker = require('audio-speaker');
-const createGenerator = require('audio-generator');
+import Speaker from 'audio-speaker'
 
-let output = createSpeaker();
-let generate = createGenerator(t => Math.sin(t * Math.PI * 2 * 440));
-
-(function loop (err, buf) {
-	let buffer = generate();
-	output(buffer, loop);
-})();
+const write = Speaker({ sampleRate: 44100, channels: 2 })
+write(pcmBuffer, (err, frames) => {})
 ```
 
-#### Related
+## Backends
 
-> [web-audio-stream](https://github.com/audiojs/web-audio-stream) — stream data to web-audio.<br/>
-> [audio-through](http://npmjs.org/package/audio-through) — universal stream for processing audio.<br/>
-> [node-speaker](http://npmjs.org/package/speaker) — output pcm stream to speaker in node.<br/>
-> [audio-feeder](https://github.com/brion/audio-feeder) — cross-browser speaker for pcm data.<br/>
+Backends are tried in order; first successful one wins.
+
+| Backend | How | Latency | Install |
+|---|---|---|---|
+| `miniaudio` | N-API addon wrapping [miniaudio.h](https://github.com/mackron/miniaudio) | Low | Prebuilt via `@audio/speaker-*` packages |
+| `process` | Pipes PCM to ffplay/sox/aplay | High | System tool must be installed |
+| `webaudio` | Web Audio API (browser only) | Low | Built-in |
+
+Prebuilt binaries are shipped as optional platform packages (like esbuild):
+
+| Platform | Package |
+|---|---|
+| macOS arm64 | `@audio/speaker-darwin-arm64` |
+| macOS x64 | `@audio/speaker-darwin-x64` |
+| Linux x64 | `@audio/speaker-linux-x64` |
+| Linux arm64 | `@audio/speaker-linux-arm64` |
+| Windows x64 | `@audio/speaker-win32-x64` |
+
+If no prebuilt is available, falls back to compiling from source via `node-gyp` (requires C compiler).
+
+## API
+
+### `write = await Speaker(opts?)`
+
+Returns an async sink function. Options:
+
+- `sampleRate` — default `44100`
+- `channels` — default `2`
+- `bitDepth` — `8`, `16` (default), `24`, `32`
+- `bufferSize` — ring buffer in ms, default `50`
+- `backend` — force a specific backend
+
+### `write(buffer, cb?)`
+
+Write PCM data. Accepts `Buffer`, `Uint8Array`, or `AudioBuffer`. Callback fires when ready for next chunk.
+
+### `write(null)`
+
+End playback. Flushes remaining audio then closes device.
+
+### `write.flush(cb?)`
+
+Wait for buffered audio to finish playing.
+
+### `write.close()`
+
+Immediately close the audio device.
+
+### `write.backend`
+
+Name of the active backend (`'miniaudio'`, `'pvspeaker'`, `'process'`, `'webaudio'`).
+
+## Building
+
+```sh
+npm run build          # compile native addon locally
+npm test               # run tests
+npm run prebuild       # create prebuildify archive
+```
+
+### Platform binaries
+
+From the repo root (`audio-speaker`), build for each target:
+
+```sh
+# macOS arm64 (native)
+npx node-gyp@latest rebuild
+
+# macOS x64 (cross-compile on arm64 mac)
+npx node-gyp@latest rebuild --arch=x64
+
+# Linux x64 / arm64 (Docker)
+docker run --rm --platform linux/amd64 \
+  -v $(pwd):/src:ro -v /tmp/out:/out node:22-slim bash -c '
+    apt-get update -qq && apt-get install -y -qq python3 make g++ > /dev/null 2>&1
+    cp -r /src /build && cd /build
+    npx node-gyp@latest rebuild 2>&1 | tail -3
+    cp build/Release/speaker.node /out/'
+
+# Windows x64 (via GitHub Actions — push, download artifact)
+gh run download <run-id> --name speaker-windows-latest
+```
+
+Copy each `speaker.node` to its platform package repo, commit, push, publish.
+
+## License
+
+MIT

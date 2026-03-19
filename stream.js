@@ -1,56 +1,46 @@
 /**
- * @module audio-speaker
+ * @module audio-speaker/stream
  *
- * Wraps node-speaker to ensure format.
- *
+ * Writable stream interface for audio-speaker.
  */
-'use strict';
+import { Writable } from 'node:stream'
+import Speaker from './index.js'
 
-var inherits = require('inherits');
-var Through = require('audio-through');
+export default class SpeakerStream extends Writable {
+  constructor(opts) {
+    super()
+    this._opts = opts
+    this._write_fn = null
+    this._closed = false
+    this._ready = this._init()
+  }
 
-var NodeSpeaker;
-try {
-	NodeSpeaker = require('speaker');
-} catch (e) {
-	console.warn('`speaker` package was not found. Using `audio-sink` instead.');
-	NodeSpeaker = require('audio-sink');
+  async _init() {
+    this._write_fn = await Speaker(this._opts)
+    // if destroy was called during init, close immediately
+    if (this._closed) this._write_fn.close()
+  }
+
+  _write(chunk, encoding, cb) {
+    this._ready.then(() => {
+      if (this._closed) return cb()
+      this._write_fn(chunk, (err) => cb(err || null))
+    }, cb)
+  }
+
+  _final(cb) {
+    this._ready.then(() => {
+      if (this._closed) return cb()
+      this._write_fn.flush(() => {
+        this._write_fn.close()
+        cb()
+      })
+    }, cb)
+  }
+
+  _destroy(err, cb) {
+    this._closed = true
+    if (this._write_fn) this._write_fn.close()
+    cb(err)
+  }
 }
-
-/**
- * Speaker is just a format wrapper for node-speaker,
- * as node-speaker doesn’t support any input format in some platforms, like windows.
- * So we need to force the most safe format.
- *
- * @constructor
- */
-function AudioSpeaker (opts) {
-	if (!(this instanceof AudioSpeaker)) {
-		return new AudioSpeaker(opts);
-	}
-
-	Through.call(this, opts);
-
-	//create node-speaker with default options - the most cross-platform case
-	this.speaker = new NodeSpeaker({
-		channels: this.channels
-	});
-
-	this.pipe(this.speaker);
-}
-
-inherits(AudioSpeaker, Through);
-
-
-/**
- * Predefined format for node-speaker
- */
-Object.assign(AudioSpeaker.prototype, {
-	float: false,
-	interleaved: true,
-	bitDepth: 16,
-	signed: true
-});
-
-
-module.exports = AudioSpeaker;

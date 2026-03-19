@@ -1,13 +1,38 @@
 {
   "name": "audio-speaker",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "description": "Output audio data to speaker in browser/node",
-  "main": "stream.js",
-  "scripts": {
-    "lint": "eslint *.js --ignore-pattern test*",
-    "test:browser": "budo test.js",
-    "test": "node test"
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": {
+      "browser": "./browser.js",
+      "default": "./index.js"
+    },
+    "./stream": {
+      "browser": "./browser.js",
+      "default": "./stream.js"
+    }
   },
+  "browser": {
+    "./index.js": "./browser.js"
+  },
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "prebuild": "prebuildify --napi",
+    "test": "node test.js"
+  },
+  "files": [
+    "index.js",
+    "stream.js",
+    "browser.js",
+    "src/",
+    "native/speaker.c",
+    "native/miniaudio.h",
+    "binding.gyp",
+    "prebuilds/"
+  ],
+  "gypfile": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/audiojs/audio-speaker"
@@ -19,40 +44,27 @@
     "speaker",
     "web-audio",
     "sound",
-    "sink"
+    "sink",
+    "miniaudio"
   ],
-  "browser": {
-    "./direct.js": "./browser-direct.js",
-    "./stream.js": "./browser-stream.js"
-  },
-  "author": "Dima Yv <dfcreative@gmail.com>",
+  "author": "Dmitry Iv. <dfcreative@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/audiojs/audio-speaker/issues"
   },
   "homepage": "https://github.com/audiojs/audio-speaker",
-  "devDependencies": {
-    "audio-buffer-utils": "^4.0.0",
-    "audio-context": "^1.0.0",
-    "audio-generator": "^2.0.1",
-    "eslint": "^3.4.0",
-    "insert-styles": "^1.2.1",
-    "pcm-util": "^2.0.2",
-    "pcm-volume": "^1.0.0",
-    "tape": "^4.6.3",
-    "tst": "^1.1.8",
-    "wavefont": "^1.2.1"
+  "engines": {
+    "node": ">=18"
   },
   "optionalDependencies": {
-    "audio-sink": "^1.0.2",
-    "speaker": "^0.5.3"
+    "@audio/speaker-darwin-arm64": "2.0.0",
+    "@audio/speaker-darwin-x64": "2.0.0",
+    "@audio/speaker-linux-x64": "2.0.0",
+    "@audio/speaker-linux-arm64": "2.0.0",
+    "@audio/speaker-win32-x64": "2.0.0"
   },
-  "dependencies": {
-    "audio-through": "^2.2.3",
-    "inherits": "^2.0.1",
-    "is-audio-buffer": "^1.0.1",
-    "pcm-util": "^2.1.0",
-    "pull-stream": "^3.4.5",
-    "web-audio-stream": "^3.0.1"
+  "devDependencies": {
+    "prebuildify": "^6.0.1",
+    "tst": "^9.3.0"
   }
 }
