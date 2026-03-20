@@ -1,0 +1,24 @@
+{
+  "name": "@audio/speaker-linux-x64",
+  "version": "2.0.1",
+  "description": "audio-speaker native addon for linux x64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/audiojs/audio-speaker",
+    "directory": "packages/speaker-linux-x64"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "speaker.node",
+  "files": [
+    "speaker.node"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

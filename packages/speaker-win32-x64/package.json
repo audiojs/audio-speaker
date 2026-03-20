@@ -1,0 +1,24 @@
+{
+  "name": "@audio/speaker-win32-x64",
+  "version": "2.0.1",
+  "description": "audio-speaker native addon for win32 x64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/audiojs/audio-speaker",
+    "directory": "packages/speaker-win32-x64"
+  },
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "speaker.node",
+  "files": [
+    "speaker.node"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

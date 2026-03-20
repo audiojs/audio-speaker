@@ -20,6 +20,9 @@
   "browser": {
     "./index.js": "./browser.js"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "node-gyp rebuild",
     "prebuild": "prebuildify --napi",
@@ -63,11 +66,11 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@audio/speaker-darwin-arm64": "2.0.0",
-    "@audio/speaker-darwin-x64": "2.0.0",
-    "@audio/speaker-linux-x64": "2.0.0",
-    "@audio/speaker-linux-arm64": "2.0.0",
-    "@audio/speaker-win32-x64": "2.0.0"
+    "@audio/speaker-darwin-arm64": "2.0.1",
+    "@audio/speaker-darwin-x64": "2.0.1",
+    "@audio/speaker-linux-x64": "2.0.1",
+    "@audio/speaker-linux-arm64": "2.0.1",
+    "@audio/speaker-win32-x64": "2.0.1"
   },
   "devDependencies": {
     "prebuildify": "^6.0.1",

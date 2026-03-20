@@ -18,6 +18,7 @@ const plat = `${platform()}-${arch()}`
 let addon
 const loaders = [
   () => require(`@audio/speaker-${plat}`),
+  () => require(join(root, 'packages', `speaker-${plat}`, 'speaker.node')),
   () => require(join(root, 'prebuilds', plat, 'audio-speaker.node')),
   () => require(join(root, 'prebuilds', plat, 'speaker.node')),
   () => require(join(root, 'build', 'Release', 'speaker.node')),

@@ -1,0 +1,24 @@
+{
+  "name": "@audio/speaker-darwin-arm64",
+  "version": "2.0.1",
+  "description": "audio-speaker native addon for darwin arm64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/audiojs/audio-speaker",
+    "directory": "packages/speaker-darwin-arm64"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "speaker.node",
+  "files": [
+    "speaker.node"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
