@@ -128,6 +128,13 @@ docker run --rm --platform linux/arm64 \
    cp build/Release/speaker.node /out/'
 ```
 
+**macOS x64** (cross-compile on ARM64 mac):
+```sh
+npx node-gyp@latest rebuild --arch=x64
+mkdir -p artifacts/speaker-darwin-x64
+cp build/Release/speaker.node artifacts/speaker-darwin-x64/
+```
+
 **Windows**: built by GitHub Actions (no local cross-compilation).
 
 ## Publishing

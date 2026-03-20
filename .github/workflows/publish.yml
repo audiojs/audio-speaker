@@ -12,8 +12,9 @@ jobs:
         include:
           - os: macos-latest
             pkg: speaker-darwin-arm64
-          - os: macos-13
+          - os: macos-latest
             pkg: speaker-darwin-x64
+            gyp_args: --arch=x64
           - os: ubuntu-latest
             pkg: speaker-linux-x64
           - os: ubuntu-24.04-arm
@@ -27,7 +28,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install --ignore-scripts
-      - run: npx node-gyp@latest rebuild
+      - run: npx node-gyp@latest rebuild ${{ matrix.gyp_args }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.pkg }}
