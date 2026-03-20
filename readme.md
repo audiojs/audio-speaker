@@ -132,18 +132,20 @@ docker run --rm --platform linux/arm64 \
 
 ## Publishing
 
-Automated via GitHub Actions on release:
-
-1. Add `NPM_TOKEN` as a repository secret (Settings → Secrets → Actions)
-2. Bump version: `npm version patch` (updates main + all platform packages)
-3. Push: `git push && git push --tags`
-4. Create GitHub release from the tag
-5. CI builds all platforms → publishes `@audio/speaker-*` packages → publishes `audio-speaker`
-
-**Manual publish** (e.g. single platform):
 ```sh
-cd packages/speaker-darwin-arm64 && npm publish
-cd ../.. && npm publish
+# 1. Bump version + push tag
+npm version patch && git push --tags
+
+# 2. Wait for CI to build all platforms (or trigger manually via Actions tab)
+gh run watch
+
+# 3. Download binaries and publish
+gh run download --dir artifacts
+for pkg in packages/speaker-*/; do
+  cp artifacts/$(basename $pkg)/speaker.node $pkg
+  cd $pkg && npm publish --access public && cd ../..
+done
+npm publish
 ```
 
 ## License

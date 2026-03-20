@@ -1,7 +1,8 @@
 name: publish
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v*']
+  workflow_dispatch:
 
 jobs:
   build:
@@ -9,12 +10,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13
-            pkg: speaker-darwin-x64
           - os: macos-latest
             pkg: speaker-darwin-arm64
+          - os: macos-13
+            pkg: speaker-darwin-x64
           - os: ubuntu-latest
             pkg: speaker-linux-x64
+          - os: ubuntu-24.04-arm
+            pkg: speaker-linux-arm64
           - os: windows-latest
             pkg: speaker-win32-x64
     runs-on: ${{ matrix.os }}
@@ -25,57 +28,7 @@ jobs:
           node-version: 22
       - run: npm install --ignore-scripts
       - run: npx node-gyp@latest rebuild
-      - run: cp build/Release/speaker.node packages/${{ matrix.pkg }}/speaker.node
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.pkg }}
-          path: packages/${{ matrix.pkg }}/speaker.node
-
-  # linux arm64 via QEMU emulation
-  build-linux-arm64:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-      - run: |
-          docker run --rm --platform linux/arm64 \
-            -v ${{ github.workspace }}:/work -w /work \
-            node:22 bash -c "npm install --ignore-scripts && npx node-gyp@latest rebuild"
-      - run: cp build/Release/speaker.node packages/speaker-linux-arm64/speaker.node
-      - uses: actions/upload-artifact@v4
-        with:
-          name: speaker-linux-arm64
-          path: packages/speaker-linux-arm64/speaker.node
-
-  publish:
-    needs: [build, build-linux-arm64]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      # copy binaries into packages
-      - run: |
-          for pkg in speaker-darwin-arm64 speaker-darwin-x64 speaker-linux-x64 speaker-linux-arm64 speaker-win32-x64; do
-            cp artifacts/$pkg/speaker.node packages/$pkg/speaker.node
-          done
-      # publish platform packages first
-      - run: |
-          for pkg in packages/speaker-*; do
-            cd $pkg
-            npm publish --access public || true
-            cd ../..
-          done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      # publish main package
-      - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          path: build/Release/speaker.node
