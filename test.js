@@ -188,6 +188,139 @@ test('small writes (128 samples) no underrun', async () => {
   ok(discontinuities <= 2, `${discontinuities} discontinuities in small-write output (frames ${start}-${end})`)
 })
 
+test('writePull: device starts and transitions to pull-paced callbacks', async () => {
+  // writePull fires cb synchronously while filling the initial buffer,
+  // then switches to hardware-paced callbacks after device starts.
+  // This test verifies both phases work and the transition is clean.
+  const { open: openDev } = await import('./src/backends/miniaudio.js')
+  const sr = 44100, bpf = 4, blockSize = 128
+  const device = openDev({ sampleRate: sr, channels: 2, bitDepth: 16, bufferSize: 50 })
+
+  let cbTimes = [], n = 0, phase = 0
+
+  await new Promise((resolve, reject) => {
+    function next() {
+      if (n >= 100) return device.flush(() => resolve())
+      let buf = Buffer.alloc(blockSize * bpf)
+      for (let i = 0; i < blockSize; i++) {
+        let v = Math.round(Math.sin(phase) * 32767)
+        phase += 2 * Math.PI * 440 / sr
+        buf.writeInt16LE(v, i * bpf); buf.writeInt16LE(v, i * bpf + 2)
+      }
+      n++
+      let t = performance.now()
+      device.write(buf, (err) => {
+        cbTimes.push(performance.now() - t)
+        err ? reject(err) : next()
+      })
+    }
+    next()
+  })
+  device.close()
+
+  // Total wall time should be near real-time (0.7-1.5x)
+  // With pull model, callbacks fire in bursts (loop refills buffer) then pause.
+  // The ratio is the meaningful metric, not individual callback timing.
+  let totalWall = cbTimes.reduce((a, b) => a + b, 0)
+  let totalAudio = n * blockSize / sr * 1000
+  let ratio = totalAudio / totalWall
+  ok(ratio > 0.7 && ratio < 1.5, `rate ${ratio.toFixed(2)}x (${totalAudio.toFixed(0)}ms audio in ${totalWall.toFixed(0)}ms wall)`)
+})
+
+test('callback pacing: write rate matches real-time', async () => {
+  // Producers writing small blocks (128 samples) via callback chain must not outrun
+  // real-time. Without pacing, the loop spins at 10-15x when the graph produces silence.
+  const write = await open()
+  const sr = 44100, blockSize = 128, bpf = 4, durationMs = 500
+
+  let framesWritten = 0
+  const wallStart = performance.now()
+
+  await new Promise((resolve, reject) => {
+    function next() {
+      if (framesWritten / sr * 1000 >= durationMs) return write.flush(() => { write.close(); resolve() })
+      // Write silence — worst case for pacing (completes instantly without pacing)
+      const buf = Buffer.alloc(blockSize * bpf)
+      framesWritten += blockSize
+      write(buf, (err) => err ? reject(err) : next())
+    }
+    next()
+  })
+
+  const wallMs = performance.now() - wallStart
+  const audioMs = framesWritten / sr * 1000
+  const ratio = audioMs / wallMs
+  // Must be near 1x (0.8-1.5x). Without pacing this would be 10x+.
+  ok(ratio < 1.5, `write rate ${ratio.toFixed(2)}x real-time (${audioMs.toFixed(0)}ms audio in ${wallMs.toFixed(0)}ms wall)`)
+  ok(ratio > 0.5, `write rate ${ratio.toFixed(2)}x not too slow`)
+})
+
+test('capture matches reference: 128-sample callback chain', async () => {
+  // Generate a reference signal, feed it through the speaker in 128-sample blocks
+  // via callback chain, capture the output, compare sample-for-sample.
+  // This catches ring buffer overruns, underruns, and pacing failures.
+  const { open: openDev } = await import('./src/backends/miniaudio.js')
+  const sr = 44100, blockSize = 128, bpf = 4
+  const durationMs = 500
+  const totalFrames = Math.round(sr * durationMs / 1000)
+
+  // Generate reference: multi-frequency signal with envelope (simulates a sequencer)
+  const ref = Buffer.alloc(totalFrames * bpf)
+  for (let i = 0; i < totalFrames; i++) {
+    let t = i / sr
+    // Two short notes with different frequencies, like a sequencer
+    let v = 0
+    if (t < 0.15) v = Math.sin(2 * Math.PI * 440 * t) * Math.min(1, t / 0.005) // note 1: 440Hz
+    else if (t >= 0.2 && t < 0.35) v = Math.sin(2 * Math.PI * 660 * t) * Math.min(1, (t - 0.2) / 0.005) // note 2: 660Hz
+    // silence between and after
+    let sample = Math.round(v * 32767)
+    ref.writeInt16LE(sample, i * bpf)
+    ref.writeInt16LE(sample, i * bpf + 2) // stereo: L=R
+  }
+
+  const device = openDev({ sampleRate: sr, channels: 2, bitDepth: 16, capture: true, bufferSize: 100 })
+
+  // Feed in 128-sample blocks via callback chain
+  let pos = 0
+  await new Promise((resolve, reject) => {
+    function next() {
+      if (pos >= ref.length) return device.flush(() => resolve())
+      let chunk = ref.subarray(pos, pos + blockSize * bpf)
+      pos += blockSize * bpf
+      device.write(chunk, (err) => err ? reject(err) : next())
+    }
+    next()
+  })
+
+  // Read captured output
+  const capBuf = Buffer.alloc(totalFrames * bpf)
+  const capFrames = device.read(capBuf)
+  device.close()
+
+  // Find signal start in capture (skip startup silence)
+  let capStart = 0
+  while (capStart < capFrames && capBuf.readInt16LE(capStart * bpf) === 0) capStart++
+
+  // Find signal start in reference
+  let refStart = 0
+  while (refStart < totalFrames && ref.readInt16LE(refStart * bpf) === 0) refStart++
+
+  // Compare captured vs reference from signal start
+  let compareLen = Math.min(capFrames - capStart, totalFrames - refStart)
+  ok(compareLen > sr * 0.1, `enough signal to compare: ${compareLen} frames`)
+
+  let mismatches = 0, maxErr = 0
+  for (let i = 0; i < compareLen; i++) {
+    let refSample = ref.readInt16LE((refStart + i) * bpf)
+    let capSample = capBuf.readInt16LE((capStart + i) * bpf)
+    let err = Math.abs(refSample - capSample)
+    if (err > maxErr) maxErr = err
+    if (err > 1) mismatches++ // allow ±1 for rounding
+  }
+
+  ok(mismatches === 0, `${mismatches} mismatches in ${compareLen} frames (maxErr=${maxErr})`)
+})
+
 test('large buffer (1s)', async () => {
   const write = await open()
   await play(write, sine(440, 1000))

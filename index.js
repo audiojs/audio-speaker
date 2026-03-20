@@ -45,6 +45,14 @@ export default async function Speaker(opts) {
   const config = { ...defaults, ...opts }
   const { name, device } = await open(config, config.backend)
 
+  const bpf = config.channels * (config.bitDepth / 8)
+  // Real-time pacing: the async write callback fires when data is copied to the ring
+  // buffer, not when the device consumes it. For small writes, this is nearly instant.
+  // Without pacing, callback-chain producers outrun playback and overwrite unplayed data.
+  let audioFrames = 0
+  let wallStart = 0
+  const margin = config.bufferSize * 0.75
+
   write.end = () => { device.close() }
   write.flush = (cb) => { device.flush(cb) }
   write.close = () => { device.close() }
@@ -59,6 +67,16 @@ export default async function Speaker(opts) {
     }
 
     const buf = isAudioBuffer(chunk) ? audioBufferToPCM(chunk, config.bitDepth) : chunk
-    device.write(buf, cb)
+    const frames = (buf.length / bpf) | 0
+
+    device.write(buf, (err, written) => {
+      if (!cb) return
+      audioFrames += frames
+      if (!wallStart) { wallStart = performance.now(); cb(err, written); return }
+      // Defer callback until wall time catches up to (audioTime - margin).
+      let delayMs = (audioFrames / config.sampleRate * 1000 - margin) - (performance.now() - wallStart)
+      if (delayMs > 1) setTimeout(() => cb(err, written), delayMs)
+      else cb(err, written)
+    })
   }
 }

@@ -21,11 +21,12 @@ write(pcmBuffer, (err) => {
 write(null) // end playback
 ```
 
-### Stream
+### Stream (Node.js)
 
 ```js
 import SpeakerStream from 'audio-speaker/stream'
 
+// Standard Node.js Writable stream — pipe any PCM source
 source.pipe(new SpeakerStream({ sampleRate: 44100, channels: 2 }))
 ```
 

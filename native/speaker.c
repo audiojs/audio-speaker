@@ -43,6 +43,7 @@ typedef struct {
   ma_uint32 sample_rate;
   ma_format format;
   ma_uint32 start_threshold;
+  ma_uint32 pull_threshold;  /* fire callback when available_read drops below this */
   int started;
   volatile int closed;
   int capture;
@@ -106,15 +107,20 @@ static void speaker_destructor(napi_env env, void* data, void* hint) {
   speaker_t* sp = (speaker_t*)data;
   if (!sp) return;
   if (!sp->closed) {
+    /* explicit close() was never called — do full device teardown */
     sp->closed = 1;
     if (sp->started) {
       ma_device_stop(&sp->device);
       sp->started = 0;
     }
     ma_device_uninit(&sp->device);
-    ma_pcm_rb_uninit(&sp->ring_buffer);
-    if (sp->capture) ma_pcm_rb_uninit(&sp->capture_rb);
   }
+  /* Ring buffer is always freed here, never in speaker_close().
+   * This avoids a race: worker thread may still be in its pull-wait loop
+   * when close() is called. setting closed=1 exits that loop, the worker
+   * finishes, JS fires the callback, then GC collects and we arrive here. */
+  ma_pcm_rb_uninit(&sp->ring_buffer);
+  if (sp->capture) ma_pcm_rb_uninit(&sp->capture_rb);
   free(sp);
   (void)env;
   (void)hint;
@@ -175,6 +181,7 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   ma_uint32 rb_pow2 = 1;
   while (rb_pow2 < rb_frames) rb_pow2 <<= 1;
   sp->start_threshold = rb_pow2 / 2;
+  sp->pull_threshold  = rb_pow2 / 4;  /* callback fires when buffer drops below 25% full */
 
   ma_result result = ma_pcm_rb_init(format, channels, rb_pow2, NULL, NULL, &sp->ring_buffer);
   if (result != MA_SUCCESS) {
@@ -302,6 +309,15 @@ static void write_execute(napi_env env, void* data) {
     }
   }
 
+  /* Pull pacing: wait until hardware consumes enough data before firing callback.
+   * This makes the callback fire when the device NEEDS more data, not when the
+   * ring buffer has space. Eliminates render-loop overrun without wall-clock hacks. */
+  if (sp->started && !sp->closed) {
+    while (!sp->closed && ma_pcm_rb_available_read(&sp->ring_buffer) >= sp->pull_threshold) {
+      ma_sleep(1);
+    }
+  }
+
   w->frames_written = written;
 }
 
@@ -423,14 +439,13 @@ static napi_value speaker_close(napi_env env, napi_callback_info info) {
   NAPI_CALL(env, napi_get_value_external(env, argv[0], (void**)&sp));
 
   if (!sp->closed) {
-    sp->closed = 1;
+    sp->closed = 1;                  /* signals worker pull-wait loop to exit */
     if (sp->started) {
       ma_device_stop(&sp->device);
       sp->started = 0;
     }
     ma_device_uninit(&sp->device);
-    ma_pcm_rb_uninit(&sp->ring_buffer);
-    if (sp->capture) ma_pcm_rb_uninit(&sp->capture_rb);
+    /* Ring buffer freed by GC destructor — worker may still be in pull-wait loop */
   }
 
   return NULL;
