@@ -1,7 +1,7 @@
 /**
  * Backend detection — tries backends in priority order
  */
-const backends = ['miniaudio', 'process']
+const backends = ['miniaudio', 'process', 'null']
 
 export async function open(opts, preference) {
   const order = preference ? [preference] : backends

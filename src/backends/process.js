@@ -4,33 +4,22 @@
 import { spawn, execSync } from 'node:child_process'
 import { platform } from 'node:os'
 
+function tryExec(cmd) {
+  try { execSync(cmd, { stdio: 'ignore' }); return true } catch { return false }
+}
+
 function findPlayer(sampleRate, channels, bitDepth) {
   const os = platform()
   const fmt = bitDepth === 8 ? 'u8' : bitDepth === 32 ? 'f32le' : `s${bitDepth}le`
 
-  // ffplay: best cross-platform option, handles stdin PCM
-  try {
-    execSync('ffplay -version', { stdio: 'ignore' })
+  if (tryExec('ffplay -version'))
     return ['ffplay', ['-nodisp', '-autoexit', '-f', fmt, '-ar', sampleRate, '-ac', channels, '-']]
-  } catch {}
 
-  // sox/play
-  try {
-    execSync('play --version', { stdio: 'ignore' })
+  if (tryExec('play --version'))
     return ['play', ['-t', 'raw', '-r', sampleRate, '-c', channels, '-b', bitDepth, '-e', 'signed-integer', '-L', '-']]
-  } catch {}
 
-  // platform-specific
-  if (os === 'linux') {
-    try {
-      execSync('aplay --version', { stdio: 'ignore' })
-      return ['aplay', ['-f', fmt, '-r', sampleRate, '-c', channels]]
-    } catch {}
-  }
-
-  if (os === 'darwin') {
-    // afplay doesn't support stdin, skip
-  }
+  if (os === 'linux' && tryExec('aplay --version'))
+    return ['aplay', ['-f', fmt, '-r', sampleRate, '-c', channels]]
 
   return null
 }
