@@ -1,6 +1,6 @@
 {
   "name": "@audio/speaker-linux-arm64",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "audio-speaker native addon for linux arm64",
   "license": "MIT",
   "repository": {
