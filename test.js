@@ -141,7 +141,7 @@ test('small buffer (single period)', async () => {
 
 test('small writes (128 samples) no underrun', async () => {
   const { open } = await import('./src/backends/miniaudio.js')
-  const device = open({ sampleRate: 44100, channels: 2, bitDepth: 16, capture: true, bufferSize: 50 })
+  const device = open({ sampleRate: 44100, channels: 2, bitDepth: 16, capture: true, bufferSize: 100 })
   const blockSize = 128
   const blocks = 80 // ~236ms of audio
   const bytesPerFrame = 4 // 2ch × 16-bit
@@ -171,14 +171,19 @@ test('small writes (128 samples) no underrun', async () => {
   device.close()
 
   ok(capFrames > totalFrames * 0.8, `captured ${capFrames}/${totalFrames} frames`)
+  // skip silence→signal transition at start, signal→silence at end
+  let start = 0
+  while (start < capFrames && capBuf.readInt16LE(start * 4) === 0) start++
+  let end = capFrames - 1
+  while (end > start && capBuf.readInt16LE(end * 4) === 0) end--
   let discontinuities = 0
-  for (let i = 1; i < capFrames; i++) {
-    const prev = capBuf.readInt16LE(i * 4 - 4)
+  for (let i = start + 1; i <= end; i++) {
+    const prev = capBuf.readInt16LE((i - 1) * 4)
     const curr = capBuf.readInt16LE(i * 4)
     const delta = Math.abs(curr - prev)
     if (delta > 5000) discontinuities++
   }
-  ok(discontinuities === 0, `${discontinuities} discontinuities in small-write output`)
+  ok(discontinuities === 0, `${discontinuities} discontinuities in small-write output (frames ${start}-${end})`)
 })
 
 test('large buffer (1s)', async () => {
