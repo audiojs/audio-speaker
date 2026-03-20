@@ -92,40 +92,59 @@ Immediately close the audio device.
 
 ### `write.backend`
 
-Name of the active backend (`'miniaudio'`, `'pvspeaker'`, `'process'`, `'webaudio'`).
+Name of the active backend (`'miniaudio'`, `'process'`, `'webaudio'`).
 
 ## Building
 
 ```sh
 npm run build          # compile native addon locally
 npm test               # run tests
-npm run prebuild       # create prebuildify archive
 ```
 
 ### Platform binaries
 
-From the repo root (`audio-speaker`), build for each target:
+Platform packages live in `packages/speaker-{platform}-{arch}/`. Binaries are built by CI and not checked into git.
 
+**Local build** (current platform):
 ```sh
-# macOS arm64 (native)
 npx node-gyp@latest rebuild
-
-# macOS x64 (cross-compile on arm64 mac)
-npx node-gyp@latest rebuild --arch=x64
-
-# Linux x64 / arm64 (Docker)
-docker run --rm --platform linux/amd64 \
-  -v $(pwd):/src:ro -v /tmp/out:/out node:22-slim bash -c '
-    apt-get update -qq && apt-get install -y -qq python3 make g++ > /dev/null 2>&1
-    cp -r /src /build && cd /build
-    npx node-gyp@latest rebuild 2>&1 | tail -3
-    cp build/Release/speaker.node /out/'
-
-# Windows x64 (via GitHub Actions — push, download artifact)
-gh run download <run-id> --name speaker-windows-latest
+cp build/Release/speaker.node packages/speaker-$(node -p "process.platform+'-'+process.arch")/
 ```
 
-Copy each `speaker.node` to its platform package repo, commit, push, publish.
+**Cross-platform** (Docker for Linux):
+```sh
+# linux x64
+docker run --rm --platform linux/amd64 \
+  -v $(pwd):/src:ro -v $(pwd)/packages/speaker-linux-x64:/out node:22-slim bash -c \
+  'apt-get update -qq && apt-get install -y -qq python3 make g++ >/dev/null 2>&1 &&
+   cp -r /src /build && cd /build && npx node-gyp@latest rebuild 2>&1 | tail -3 &&
+   cp build/Release/speaker.node /out/'
+
+# linux arm64 (via QEMU)
+docker run --rm --platform linux/arm64 \
+  -v $(pwd):/src:ro -v $(pwd)/packages/speaker-linux-arm64:/out node:22-slim bash -c \
+  'apt-get update -qq && apt-get install -y -qq python3 make g++ >/dev/null 2>&1 &&
+   cp -r /src /build && cd /build && npx node-gyp@latest rebuild 2>&1 | tail -3 &&
+   cp build/Release/speaker.node /out/'
+```
+
+**Windows**: built by GitHub Actions (no local cross-compilation).
+
+## Publishing
+
+Automated via GitHub Actions on release:
+
+1. Add `NPM_TOKEN` as a repository secret (Settings → Secrets → Actions)
+2. Bump version: `npm version patch` (updates main + all platform packages)
+3. Push: `git push && git push --tags`
+4. Create GitHub release from the tag
+5. CI builds all platforms → publishes `@audio/speaker-*` packages → publishes `audio-speaker`
+
+**Manual publish** (e.g. single platform):
+```sh
+cd packages/speaker-darwin-arm64 && npm publish
+cd ../.. && npm publish
+```
 
 ## License
 

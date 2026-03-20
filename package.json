@@ -25,8 +25,8 @@
   ],
   "scripts": {
     "build": "node-gyp rebuild",
-    "prebuild": "prebuildify --napi",
-    "test": "node test.js"
+    "test": "node test.js",
+    "version": "node -e \"const v=require('./package.json').version,fs=require('fs');for(const d of fs.readdirSync('packages')){const f='packages/'+d+'/package.json',p=JSON.parse(fs.readFileSync(f));p.version=v;fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')}\" && git add packages/*/package.json"
   },
   "files": [
     "index.js",
@@ -66,11 +66,11 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@audio/speaker-darwin-arm64": "2.0.1",
-    "@audio/speaker-darwin-x64": "2.0.1",
-    "@audio/speaker-linux-x64": "2.0.1",
-    "@audio/speaker-linux-arm64": "2.0.1",
-    "@audio/speaker-win32-x64": "2.0.1"
+    "@audio/speaker-darwin-arm64": ">=2.0.0",
+    "@audio/speaker-darwin-x64": ">=2.0.0",
+    "@audio/speaker-linux-x64": ">=2.0.0",
+    "@audio/speaker-linux-arm64": ">=2.0.0",
+    "@audio/speaker-win32-x64": ">=2.0.0"
   },
   "devDependencies": {
     "prebuildify": "^6.0.1",
