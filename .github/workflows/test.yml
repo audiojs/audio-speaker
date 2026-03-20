@@ -17,9 +17,3 @@ jobs:
       - run: npm install --ignore-scripts
       - run: npx node-gyp@latest rebuild
       - run: npm test
-      # upload binaries for all OS × arch combos (node 22 only)
-      - if: matrix.node == 22
-        uses: actions/upload-artifact@v4
-        with:
-          name: speaker-${{ runner.os }}-${{ runner.arch }}
-          path: build/Release/speaker.node

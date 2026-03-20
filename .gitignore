@@ -5,3 +5,4 @@ build
 *.tmp
 /.claude
 packages/**/speaker.node
+artifacts/

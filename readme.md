@@ -140,10 +140,10 @@ npm version patch && git push --tags
 gh run watch
 
 # 3. Download binaries and publish
-gh run download --dir artifacts
+gh run download --dir artifacts -n speaker-darwin-arm64 -n speaker-darwin-x64 -n speaker-linux-x64 -n speaker-linux-arm64 -n speaker-win32-x64
 for pkg in packages/speaker-*/; do
   cp artifacts/$(basename $pkg)/speaker.node $pkg
-  cd $pkg && npm publish --access public && cd ../..
+  cd $pkg && npm publish && cd ../..
 done
 npm publish
 ```
