@@ -2,8 +2,10 @@
  * audio-speaker native addon
  * Minimal miniaudio N-API binding: ring buffer bridging push writes ↔ pull callback
  *
- * Features:
- * - Async write (worker thread, no JS event loop in critical path)
+ * Architecture:
+ * - writeSync: non-blocking memcpy into ring buffer (for small/real-time writes)
+ * - writeAsync: blocks on worker thread until all data written (for large buffers)
+ * - JS tries sync first, falls back to async when ring buffer is full
  * - Optional capture ring buffer for output verification
  */
 
@@ -36,14 +38,14 @@
 typedef struct {
   ma_device device;
   ma_pcm_rb ring_buffer;
-  ma_pcm_rb capture_rb;      /* capture ring buffer (opt-in) */
+  ma_pcm_rb capture_rb;
   ma_uint32 channels;
   ma_uint32 sample_rate;
   ma_format format;
-  ma_uint32 start_threshold; /* frames buffered before device starts */
+  ma_uint32 start_threshold;
   int started;
-  int closed;
-  int capture;               /* 1 if capture enabled */
+  volatile int closed;
+  int capture;
 } speaker_t;
 
 /* Async write work */
@@ -54,31 +56,36 @@ typedef struct {
   ma_uint32 frames_written;
   napi_async_work work;
   napi_ref callback_ref;
-  napi_ref buffer_ref;       /* prevent GC of buffer during async write */
+  napi_ref buffer_ref;
 } write_work_t;
 
-/* Miniaudio playback callback — pulls from ring buffer, captures output */
+/* Try to start device if threshold reached */
+static void maybe_start(speaker_t* sp) {
+  if (!sp->started && ma_pcm_rb_available_read(&sp->ring_buffer) >= sp->start_threshold) {
+    if (ma_device_start(&sp->device) == MA_SUCCESS) {
+      sp->started = 1;
+    }
+  }
+}
+
+/* Playback callback — pulls from ring buffer */
 static void playback_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
   speaker_t* sp = (speaker_t*)device->pUserData;
   ma_uint32 bpf = ma_get_bytes_per_frame(sp->format, sp->channels);
 
-  /* read in a loop to handle ring buffer wraparound */
   ma_uint32 total_read = 0;
   while (total_read < frame_count) {
     ma_uint32 to_read = frame_count - total_read;
     void* read_buf;
-    ma_result result = ma_pcm_rb_acquire_read(&sp->ring_buffer, &to_read, &read_buf);
-    if (result != MA_SUCCESS || to_read == 0) break;
+    if (ma_pcm_rb_acquire_read(&sp->ring_buffer, &to_read, &read_buf) != MA_SUCCESS || to_read == 0) break;
     memcpy((ma_uint8*)output + total_read * bpf, read_buf, to_read * bpf);
     ma_pcm_rb_commit_read(&sp->ring_buffer, to_read);
     total_read += to_read;
   }
-  /* silence any remaining */
   if (total_read < frame_count) {
     memset((ma_uint8*)output + total_read * bpf, 0, (frame_count - total_read) * bpf);
   }
 
-  /* capture in a loop to handle wraparound */
   if (sp->capture) {
     ma_uint32 total_cap = 0;
     while (total_cap < frame_count) {
@@ -129,7 +136,7 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   NAPI_CALL(env, napi_get_value_uint32(env, argv[1], &channels));
   NAPI_CALL(env, napi_get_value_uint32(env, argv[2], &bit_depth));
 
-  buffer_ms = 100;
+  buffer_ms = 50;
   if (argc > 3) NAPI_CALL(env, napi_get_value_uint32(env, argv[3], &buffer_ms));
   if (buffer_ms < 10) buffer_ms = 10;
   if (buffer_ms > 2000) buffer_ms = 2000;
@@ -163,12 +170,11 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   sp->format = format;
   sp->capture = capture;
 
-  /* ring buffer: round up to power of 2 */
+  /* ring buffer */
   ma_uint32 rb_frames = (sample_rate * buffer_ms) / 1000;
   ma_uint32 rb_pow2 = 1;
   while (rb_pow2 < rb_frames) rb_pow2 <<= 1;
-
-  sp->start_threshold = rb_pow2 / 2; /* start playback when half-full */
+  sp->start_threshold = rb_pow2 / 2;
 
   ma_result result = ma_pcm_rb_init(format, channels, rb_pow2, NULL, NULL, &sp->ring_buffer);
   if (result != MA_SUCCESS) {
@@ -177,7 +183,7 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
     return NULL;
   }
 
-  /* capture ring buffer — 5s to hold enough for verification */
+  /* capture ring buffer */
   if (capture) {
     ma_uint32 cap_frames = sample_rate * 5;
     ma_uint32 cap_pow2 = 1;
@@ -191,6 +197,7 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
     }
   }
 
+  /* audio device (started later) */
   ma_device_config config = ma_device_config_init(ma_device_type_playback);
   config.playback.format = format;
   config.playback.channels = channels;
@@ -208,7 +215,6 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
     return NULL;
   }
 
-  /* device starts later — when ring buffer reaches threshold (write_execute) */
   sp->started = 0;
 
   napi_value external;
@@ -216,8 +222,57 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   return external;
 }
 
-/* --- Async write --- */
+/*
+ * speaker_writeSync(handle, buffer) → framesWritten
+ * Non-blocking: writes as many frames as ring buffer can accept right now.
+ * Returns immediately. Zero overhead per call.
+ */
+static napi_value speaker_write_sync(napi_env env, napi_callback_info info) {
+  size_t argc = 2;
+  napi_value argv[2];
+  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
 
+  speaker_t* sp;
+  NAPI_CALL(env, napi_get_value_external(env, argv[0], (void**)&sp));
+
+  if (sp->closed) {
+    napi_value result;
+    NAPI_CALL(env, napi_create_int32(env, 0, &result));
+    return result;
+  }
+
+  void* data;
+  size_t byte_length;
+  NAPI_CALL(env, napi_get_buffer_info(env, argv[1], &data, &byte_length));
+
+  ma_uint32 bpf = ma_get_bytes_per_frame(sp->format, sp->channels);
+  if (bpf == 0) {
+    napi_value result;
+    NAPI_CALL(env, napi_create_int32(env, 0, &result));
+    return result;
+  }
+
+  ma_uint32 total = (ma_uint32)(byte_length / bpf);
+  ma_uint32 written = 0;
+
+  while (written < total) {
+    ma_uint32 to_write = total - written;
+    void* write_buf;
+    ma_result res = ma_pcm_rb_acquire_write(&sp->ring_buffer, &to_write, &write_buf);
+    if (res != MA_SUCCESS || to_write == 0) break;
+    memcpy(write_buf, (ma_uint8*)data + written * bpf, to_write * bpf);
+    ma_pcm_rb_commit_write(&sp->ring_buffer, to_write);
+    written += to_write;
+  }
+
+  maybe_start(sp);
+
+  napi_value result;
+  NAPI_CALL(env, napi_create_uint32(env, written, &result));
+  return result;
+}
+
+/* Async write — blocks on worker thread until all data written */
 static void write_execute(napi_env env, void* data) {
   write_work_t* w = (write_work_t*)data;
   speaker_t* sp = w->sp;
@@ -235,19 +290,12 @@ static void write_execute(napi_env env, void* data) {
       memcpy(write_buf, (ma_uint8*)w->data + written * bpf, to_write * bpf);
       ma_pcm_rb_commit_write(&sp->ring_buffer, to_write);
       written += to_write;
-
-      /* start device once ring buffer reaches threshold */
-      if (!sp->started && ma_pcm_rb_available_read(&sp->ring_buffer) >= sp->start_threshold) {
-        if (ma_device_start(&sp->device) == MA_SUCCESS) {
-          sp->started = 1;
-        }
-      }
+      maybe_start(sp);
     } else {
       ma_sleep(1);
     }
   }
 
-  /* if we wrote everything but device hasn't started (short audio), start now */
   if (!sp->started && written > 0 && !sp->closed) {
     if (ma_device_start(&sp->device) == MA_SUCCESS) {
       sp->started = 1;
@@ -264,7 +312,6 @@ static void write_complete(napi_env env, napi_status status, void* data) {
   napi_get_reference_value(env, w->callback_ref, &callback);
   napi_get_global(env, &global);
 
-  /* cb(null, framesWritten) */
   napi_get_null(env, &argv[0]);
   napi_create_uint32(env, w->frames_written, &argv[1]);
   napi_call_function(env, global, callback, 2, argv, NULL);
@@ -275,8 +322,8 @@ static void write_complete(napi_env env, napi_status status, void* data) {
   free(w);
 }
 
-/* speaker_write(handle, buffer, callback) — async, calls cb(null, framesWritten) */
-static napi_value speaker_write(napi_env env, napi_callback_info info) {
+/* speaker_writeAsync(handle, buffer, callback) */
+static napi_value speaker_write_async(napi_env env, napi_callback_info info) {
   size_t argc = 3;
   napi_value argv[3];
   NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
@@ -309,7 +356,7 @@ static napi_value speaker_write(napi_env env, napi_callback_info info) {
   return NULL;
 }
 
-/* speaker_read(handle, buffer) → frames read from capture buffer */
+/* speaker_read(handle, buffer) → frames */
 static napi_value speaker_read(napi_env env, napi_callback_info info) {
   size_t argc = 2;
   napi_value argv[2];
@@ -334,8 +381,7 @@ static napi_value speaker_read(napi_env env, napi_callback_info info) {
   while (frames_read < max_frames) {
     ma_uint32 to_read = max_frames - frames_read;
     void* read_buf;
-    ma_result res = ma_pcm_rb_acquire_read(&sp->capture_rb, &to_read, &read_buf);
-    if (res != MA_SUCCESS || to_read == 0) break;
+    if (ma_pcm_rb_acquire_read(&sp->capture_rb, &to_read, &read_buf) != MA_SUCCESS || to_read == 0) break;
     memcpy((ma_uint8*)data + frames_read * bpf, read_buf, to_read * bpf);
     ma_pcm_rb_commit_read(&sp->capture_rb, to_read);
     frames_read += to_read;
@@ -355,7 +401,6 @@ static napi_value speaker_flush(napi_env env, napi_callback_info info) {
   speaker_t* sp;
   NAPI_CALL(env, napi_get_value_external(env, argv[0], (void**)&sp));
 
-  /* start device if not started yet (short audio + flush) */
   if (!sp->started && ma_pcm_rb_available_read(&sp->ring_buffer) > 0) {
     if (ma_device_start(&sp->device) == MA_SUCCESS) {
       sp->started = 1;
@@ -394,13 +439,14 @@ static napi_value speaker_close(napi_env env, napi_callback_info info) {
 /* Module init */
 static napi_value init(napi_env env, napi_value exports) {
   napi_property_descriptor props[] = {
-    { "open",  NULL, speaker_open,  NULL, NULL, NULL, napi_default, NULL },
-    { "write", NULL, speaker_write, NULL, NULL, NULL, napi_default, NULL },
-    { "read",  NULL, speaker_read,  NULL, NULL, NULL, napi_default, NULL },
-    { "flush", NULL, speaker_flush, NULL, NULL, NULL, napi_default, NULL },
-    { "close", NULL, speaker_close, NULL, NULL, NULL, napi_default, NULL },
+    { "open",       NULL, speaker_open,        NULL, NULL, NULL, napi_default, NULL },
+    { "writeSync",  NULL, speaker_write_sync,  NULL, NULL, NULL, napi_default, NULL },
+    { "writeAsync", NULL, speaker_write_async, NULL, NULL, NULL, napi_default, NULL },
+    { "read",       NULL, speaker_read,        NULL, NULL, NULL, napi_default, NULL },
+    { "flush",      NULL, speaker_flush,       NULL, NULL, NULL, napi_default, NULL },
+    { "close",      NULL, speaker_close,       NULL, NULL, NULL, napi_default, NULL },
   };
-  NAPI_CALL(env, napi_define_properties(env, exports, 5, props));
+  NAPI_CALL(env, napi_define_properties(env, exports, 6, props));
   return exports;
 }
 
