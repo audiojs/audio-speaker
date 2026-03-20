@@ -181,7 +181,7 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   ma_uint32 rb_pow2 = 1;
   while (rb_pow2 < rb_frames) rb_pow2 <<= 1;
   sp->start_threshold = rb_pow2 / 2;
-  sp->pull_threshold  = rb_pow2 / 4;  /* callback fires when buffer drops below 25% full */
+  sp->pull_threshold  = rb_pow2 / 2;  /* callback fires when buffer drops below 50% — gives ~25ms headroom, absorbs Windows ~15ms sleep granularity */
 
   ma_result result = ma_pcm_rb_init(format, channels, rb_pow2, NULL, NULL, &sp->ring_buffer);
   if (result != MA_SUCCESS) {

@@ -2,6 +2,7 @@ import test from 'tst'
 import { ok, is } from 'tst'
 
 const isBrowser = typeof window !== 'undefined'
+const isCI = !!process.env?.CI
 
 if (isBrowser) test.manual = true
 
@@ -183,8 +184,8 @@ test('small writes (128 samples) no underrun', async () => {
     const delta = Math.abs(curr - prev)
     if (delta > 5000) discontinuities++
   }
-  // ≤2 discontinuities = at most 1 GC-induced underrun (signal→silence→signal)
-  // Node.js cannot guarantee GC-free execution; the ring buffer absorbs jitter but not long pauses
+  // ≤2 discontinuities: at most 1 GC-induced underrun (signal→silence→signal)
+  // pull_threshold = rb_pow2/2 gives 25ms headroom, absorbing Windows ~15ms sleep granularity
   ok(discontinuities <= 2, `${discontinuities} discontinuities in small-write output (frames ${start}-${end})`)
 })
 
@@ -255,7 +256,7 @@ test('callback pacing: write rate matches real-time', async () => {
   ok(ratio > 0.5, `write rate ${ratio.toFixed(2)}x not too slow`)
 })
 
-test('capture matches reference: 128-sample callback chain', async () => {
+test('capture matches reference: 128-sample callback chain', { skip: isCI }, async () => {
   // Generate a reference signal, feed it through the speaker in 128-sample blocks
   // via callback chain, capture the output, compare sample-for-sample.
   // This catches ring buffer overruns, underruns, and pacing failures.
@@ -435,8 +436,6 @@ if (!isBrowser) {
   })
 
   // capture tests require real audio device — skip in CI (null backend has different sample rate)
-  const isCI = !!process.env.CI
-
   test('capture: verify output matches input', { skip: isCI }, async () => {
     const { open } = await import('./src/backends/miniaudio.js')
     const device = open({ sampleRate: 44100, channels: 1, bitDepth: 16, capture: true })
