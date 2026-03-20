@@ -20,9 +20,6 @@
   "browser": {
     "./index.js": "./browser.js"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "build": "node-gyp rebuild",
     "test": "node test.js",
