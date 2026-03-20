@@ -40,6 +40,7 @@ typedef struct {
   ma_uint32 channels;
   ma_uint32 sample_rate;
   ma_format format;
+  ma_uint32 start_threshold; /* frames buffered before device starts */
   int started;
   int closed;
   int capture;               /* 1 if capture enabled */
@@ -167,6 +168,8 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
   ma_uint32 rb_pow2 = 1;
   while (rb_pow2 < rb_frames) rb_pow2 <<= 1;
 
+  sp->start_threshold = rb_pow2 / 2; /* start playback when half-full */
+
   ma_result result = ma_pcm_rb_init(format, channels, rb_pow2, NULL, NULL, &sp->ring_buffer);
   if (result != MA_SUCCESS) {
     free(sp);
@@ -205,17 +208,8 @@ static napi_value speaker_open(napi_env env, napi_callback_info info) {
     return NULL;
   }
 
-  result = ma_device_start(&sp->device);
-  if (result != MA_SUCCESS) {
-    ma_device_uninit(&sp->device);
-    ma_pcm_rb_uninit(&sp->ring_buffer);
-    if (capture) ma_pcm_rb_uninit(&sp->capture_rb);
-    free(sp);
-    napi_throw_error(env, NULL, "Failed to start audio device");
-    return NULL;
-  }
-
-  sp->started = 1;
+  /* device starts later — when ring buffer reaches threshold (write_execute) */
+  sp->started = 0;
 
   napi_value external;
   NAPI_CALL(env, napi_create_external(env, sp, speaker_destructor, NULL, &external));
@@ -241,10 +235,25 @@ static void write_execute(napi_env env, void* data) {
       memcpy(write_buf, (ma_uint8*)w->data + written * bpf, to_write * bpf);
       ma_pcm_rb_commit_write(&sp->ring_buffer, to_write);
       written += to_write;
+
+      /* start device once ring buffer reaches threshold */
+      if (!sp->started && ma_pcm_rb_available_read(&sp->ring_buffer) >= sp->start_threshold) {
+        if (ma_device_start(&sp->device) == MA_SUCCESS) {
+          sp->started = 1;
+        }
+      }
     } else {
       ma_sleep(1);
     }
   }
+
+  /* if we wrote everything but device hasn't started (short audio), start now */
+  if (!sp->started && written > 0 && !sp->closed) {
+    if (ma_device_start(&sp->device) == MA_SUCCESS) {
+      sp->started = 1;
+    }
+  }
+
   w->frames_written = written;
 }
 
@@ -345,6 +354,13 @@ static napi_value speaker_flush(napi_env env, napi_callback_info info) {
 
   speaker_t* sp;
   NAPI_CALL(env, napi_get_value_external(env, argv[0], (void**)&sp));
+
+  /* start device if not started yet (short audio + flush) */
+  if (!sp->started && ma_pcm_rb_available_read(&sp->ring_buffer) > 0) {
+    if (ma_device_start(&sp->device) == MA_SUCCESS) {
+      sp->started = 1;
+    }
+  }
 
   int flushed = (ma_pcm_rb_available_read(&sp->ring_buffer) == 0);
   napi_value result;

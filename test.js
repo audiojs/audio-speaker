@@ -60,12 +60,19 @@ test('null ends playback', async () => {
 
 test('multiple chunks', async () => {
   const write = await open()
-  const chunk = sine(660, 25)
-  let n = 0
+  let n = 0, phase = 0
   await new Promise((resolve, reject) => {
     ;(function next() {
       if (n >= 4) return write.flush(() => { write.close(); resolve() })
-      write(chunk, (err) => { if (err) return reject(err); n++; next() })
+      const frames = Math.round(44100 * 25 / 1000)
+      const buf = Buffer.alloc(frames * 4)
+      for (let i = 0; i < frames; i++) {
+        const val = Math.round(Math.sin(phase) * 32767)
+        phase += 2 * Math.PI * 660 / 44100
+        buf.writeInt16LE(val, i * 4)
+        buf.writeInt16LE(val, i * 4 + 2)
+      }
+      write(buf, (err) => { if (err) return reject(err); n++; next() })
     })()
   })
   is(n, 4)
@@ -132,6 +139,48 @@ test('small buffer (single period)', async () => {
   await play(write, sine(440, 5))
 })
 
+test('small writes (128 samples) no underrun', async () => {
+  const { open } = await import('./src/backends/miniaudio.js')
+  const device = open({ sampleRate: 44100, channels: 2, bitDepth: 16, capture: true, bufferSize: 50 })
+  const blockSize = 128
+  const blocks = 80 // ~236ms of audio
+  const bytesPerFrame = 4 // 2ch × 16-bit
+
+  // write 128-sample blocks in a callback chain (simulates real-time rendering)
+  await new Promise((resolve, reject) => {
+    let phase = 0, n = 0
+    function next() {
+      if (n >= blocks) return device.flush(() => resolve())
+      const buf = Buffer.alloc(blockSize * bytesPerFrame)
+      for (let i = 0; i < blockSize; i++) {
+        const val = Math.sin(phase) * 32767
+        phase += 2 * Math.PI * 440 / 44100
+        buf.writeInt16LE(Math.round(val), i * 4)
+        buf.writeInt16LE(Math.round(val), i * 4 + 2)
+      }
+      n++
+      device.write(buf, (err) => err ? reject(err) : next())
+    }
+    next()
+  })
+
+  // read captured output and check for discontinuities
+  const totalFrames = blockSize * blocks
+  const capBuf = Buffer.alloc(totalFrames * bytesPerFrame)
+  const capFrames = device.read(capBuf)
+  device.close()
+
+  ok(capFrames > totalFrames * 0.8, `captured ${capFrames}/${totalFrames} frames`)
+  let discontinuities = 0
+  for (let i = 1; i < capFrames; i++) {
+    const prev = capBuf.readInt16LE(i * 4 - 4)
+    const curr = capBuf.readInt16LE(i * 4)
+    const delta = Math.abs(curr - prev)
+    if (delta > 5000) discontinuities++
+  }
+  ok(discontinuities === 0, `${discontinuities} discontinuities in small-write output`)
+})
+
 test('large buffer (1s)', async () => {
   const write = await open()
   await play(write, sine(440, 1000))
@@ -178,12 +227,19 @@ if (!isBrowser) {
     const { Readable } = await import('node:stream')
     const { pipeline } = await import('node:stream/promises')
 
-    const chunk = sine(440, 25)
-    let n = 0
+    let n = 0, phase = 0
     const source = new Readable({
       read() {
         if (n >= 4) return this.push(null)
-        this.push(chunk)
+        const frames = Math.round(44100 * 25 / 1000)
+        const buf = Buffer.alloc(frames * 4)
+        for (let i = 0; i < frames; i++) {
+          const val = Math.round(Math.sin(phase) * 32767)
+          phase += 2 * Math.PI * 440 / 44100
+          buf.writeInt16LE(val, i * 4)
+          buf.writeInt16LE(val, i * 4 + 2)
+        }
+        this.push(buf)
         n++
       }
     })
