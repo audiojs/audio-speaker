@@ -133,17 +133,27 @@ docker run --rm --platform linux/arm64 \
 ## Publishing
 
 ```sh
-# 1. Bump version + push tag
-npm version patch && git push --tags
+# 1. Bump version + push
+npm version patch && git push && git push --tags
 
-# 2. Wait for CI to build all platforms (or trigger manually via Actions tab)
+# 2. Wait for CI to build all platforms
 gh run watch
 
-# 3. Download binaries and publish
-gh run download --dir artifacts -n speaker-darwin-arm64 -n speaker-darwin-x64 -n speaker-linux-x64 -n speaker-linux-arm64 -n speaker-win32-x64
+# 3. Download binaries from CI
+rm -rf artifacts
+gh run download --dir artifacts \
+  -n speaker-darwin-arm64 -n speaker-darwin-x64 \
+  -n speaker-linux-x64 -n speaker-linux-arm64 -n speaker-win32-x64
+
+# 3a. (fallback) If darwin-x64 CI is unavailable, cross-compile locally:
+npx node-gyp@latest rebuild --arch=x64
+mkdir -p artifacts/speaker-darwin-x64
+cp build/Release/speaker.node artifacts/speaker-darwin-x64/
+
+# 4. Copy to packages + publish
 for pkg in packages/speaker-*/; do
-  cp artifacts/$(basename $pkg)/speaker.node $pkg
-  cd $pkg && npm publish && cd ../..
+  cp artifacts/$(basename $pkg)/speaker.node $pkg/
+  (cd $pkg && npm publish)
 done
 npm publish
 ```
