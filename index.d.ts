@@ -3,7 +3,7 @@ export interface SpeakerOptions {
   channels?: number
   bitDepth?: 8 | 16 | 24 | 32
   bufferSize?: number
-  backend?: 'miniaudio' | 'process'
+  backend?: 'miniaudio' | 'process' | 'null'
 }
 
 export interface WriteFn {
@@ -14,4 +14,4 @@ export interface WriteFn {
   backend: string
 }
 
-export default function Speaker(opts?: SpeakerOptions): Promise<WriteFn>
+export default function speaker(opts?: SpeakerOptions): WriteFn

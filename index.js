@@ -2,7 +2,9 @@
  * @module audio-speaker
  *
  * Output audio data to speaker.
- * Returns write(chunk, cb) async sink function.
+ * let write = speaker({ sampleRate: 44100 })
+ * write(pcmBuffer, cb)
+ * write(null) // end
  */
 import { open } from './src/backend.js'
 
@@ -41,9 +43,9 @@ function audioBufferToPCM(ab, bitDepth) {
   return buf
 }
 
-export default async function Speaker(opts) {
+export default function speaker(opts) {
   const config = { ...defaults, ...opts }
-  const { name, device } = await open(config, config.backend)
+  const { name, device } = open(config, config.backend)
 
   write.end = () => { device.close() }
   write.flush = (cb) => { device.flush(cb) }

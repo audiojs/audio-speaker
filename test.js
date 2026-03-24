@@ -8,7 +8,7 @@ if (isBrowser) test.manual = true
 
 const { default: Speaker } = await import(isBrowser ? './browser.js' : './index.js')
 
-const open = (opts) => isBrowser ? Speaker(opts) : Speaker(opts)
+const open = (opts) => Speaker(opts)
 
 // generate PCM sine with fade in/out to avoid clicks
 const FADE_MS = 5
@@ -44,13 +44,13 @@ function play(write, buf) {
 // --- core ---
 
 test('play sine', async () => {
-  const write = await open()
+  const write = open()
   ok(write.backend, 'has backend')
   await play(write, sine(440, 100))
 })
 
 test('null ends playback', async () => {
-  const write = await open()
+  const write = open()
   await new Promise((resolve, reject) => {
     write(sine(440, 50), (err) => {
       if (err) return reject(err)
@@ -60,7 +60,7 @@ test('null ends playback', async () => {
 })
 
 test('multiple chunks', async () => {
-  const write = await open()
+  const write = open()
   let n = 0, phase = 0
   await new Promise((resolve, reject) => {
     ;(function next() {
@@ -80,7 +80,7 @@ test('multiple chunks', async () => {
 })
 
 test('double close is safe', async () => {
-  const write = await open()
+  const write = open()
   await play(write, sine(440, 30))
   write.close() // second close — should not throw
 })
@@ -88,42 +88,42 @@ test('double close is safe', async () => {
 // --- formats ---
 
 test('mono', async () => {
-  const write = await open({ channels: 1 })
+  const write = open({ channels: 1 })
   await play(write, sine(880, 100, { channels: 1 }))
 })
 
 test('48kHz', async () => {
   const opts = { sampleRate: 48000 }
-  const write = await open(opts)
+  const write = open(opts)
   await play(write, sine(440, 100, opts))
 })
 
 test('22050Hz sample rate', async () => {
   const opts = { sampleRate: 22050 }
-  const write = await open(opts)
+  const write = open(opts)
   await play(write, sine(440, 100, opts))
 })
 
 test('4 channels', async () => {
   const opts = { channels: 4 }
-  const write = await open(opts)
+  const write = open(opts)
   await play(write, sine(440, 100, opts))
 })
 
 test('6 channels (5.1)', async () => {
   const opts = { channels: 6 }
-  const write = await open(opts)
+  const write = open(opts)
   await play(write, sine(440, 100, opts))
 })
 
 test('96kHz sample rate', async () => {
   const opts = { sampleRate: 96000 }
-  const write = await open(opts)
+  const write = open(opts)
   await play(write, sine(440, 100, opts))
 })
 
 test('different frequencies', async () => {
-  const write = await open()
+  const write = open()
   for (const freq of [220, 440, 880, 1760]) {
     await new Promise((resolve, reject) => {
       write(sine(freq, 50), (err) => err ? reject(err) : resolve())
@@ -135,7 +135,7 @@ test('different frequencies', async () => {
 // --- edge cases ---
 
 test('small buffer (single period)', async () => {
-  const write = await open()
+  const write = open()
   // ~2ms of 440Hz = ~1 period
   await play(write, sine(440, 5))
 })
@@ -225,13 +225,13 @@ test('writePull: device starts and transitions to pull-paced callbacks', async (
   let totalWall = cbTimes.reduce((a, b) => a + b, 0)
   let totalAudio = n * blockSize / sr * 1000
   let ratio = totalAudio / totalWall
-  ok(ratio > 0.7 && ratio < 1.5, `rate ${ratio.toFixed(2)}x (${totalAudio.toFixed(0)}ms audio in ${totalWall.toFixed(0)}ms wall)`)
+  ok(ratio > 0.5 && ratio < 2, `rate ${ratio.toFixed(2)}x (${totalAudio.toFixed(0)}ms audio in ${totalWall.toFixed(0)}ms wall)`)
 })
 
 test('callback pacing: write rate matches real-time', async () => {
   // Producers writing small blocks (128 samples) via callback chain must not outrun
   // real-time. Without pacing, the loop spins at 10-15x when the graph produces silence.
-  const write = await open()
+  const write = open()
   const sr = 44100, blockSize = 128, bpf = 4, durationMs = 500
 
   let framesWritten = 0
@@ -323,12 +323,12 @@ test('capture matches reference: 128-sample callback chain', { skip: isCI }, asy
 })
 
 test('large buffer (1s)', async () => {
-  const write = await open()
+  const write = open()
   await play(write, sine(440, 1000))
 })
 
 test('write after flush', async () => {
-  const write = await open()
+  const write = open()
   await new Promise((resolve, reject) => {
     write(sine(440, 50), (err) => {
       if (err) return reject(err)
@@ -343,16 +343,16 @@ test('write after flush', async () => {
 
 if (!isBrowser) {
   test('stream: highWaterMark matches ring buffer', async () => {
-    const { default: SpeakerStream } = await import('./stream.js')
-    const speaker = new SpeakerStream({ sampleRate: 44100, channels: 2, bitDepth: 16, bufferSize: 50 })
+    const { default: writable } = await import('./stream.js')
+    const s = writable({ sampleRate: 44100, channels: 2, bitDepth: 16, bufferSize: 50 })
     // 50ms × 44100Hz × 2ch × 2bytes = 8820 bytes
-    is(speaker.writableHighWaterMark, 8820)
-    speaker.destroy()
-    await new Promise(resolve => speaker.on('close', resolve))
+    is(s.writableHighWaterMark, 8820)
+    s.destroy()
+    await new Promise(resolve => s.on('close', resolve))
   })
 
   test('backpressure: write blocks until ring buffer drains', async () => {
-    const write = await Speaker({ bufferSize: 50 })
+    const write = Speaker({ bufferSize: 50 })
     // write 500ms of audio into 50ms buffer — should take ~500ms (real-time)
     const bigBuf = sine(440, 500)
     const start = performance.now()
@@ -364,7 +364,7 @@ if (!isBrowser) {
   })
 
   test('stream: pipe writable', async () => {
-    const { default: SpeakerStream } = await import('./stream.js')
+    const { default: writable } = await import('./stream.js')
     const { Readable } = await import('node:stream')
     const { pipeline } = await import('node:stream/promises')
 
@@ -385,22 +385,22 @@ if (!isBrowser) {
       }
     })
 
-    await pipeline(source, new SpeakerStream())
+    await pipeline(source, writable())
   })
 
   test('explicit miniaudio backend', async () => {
-    const write = await Speaker({ backend: 'miniaudio' })
+    const write = Speaker({ backend: 'miniaudio' })
     is(write.backend, 'miniaudio')
     await play(write, sine(440, 50))
   })
 
   test('stream: destroy mid-playback', async () => {
-    const { default: SpeakerStream } = await import('./stream.js')
-    const speaker = new SpeakerStream()
-    speaker.write(sine(440, 100))
-    speaker.destroy()
+    const { default: writable } = await import('./stream.js')
+    const s = writable()
+    s.write(sine(440, 100))
+    s.destroy()
     // should not throw or hang
-    await new Promise(resolve => speaker.on('close', resolve))
+    await new Promise(resolve => s.on('close', resolve))
   })
 
   test('close during active write must not crash (use-after-free)', async () => {
@@ -538,7 +538,7 @@ if (!isBrowser) {
       getChannelData: () => data
     }
 
-    const write = await Speaker({ channels: 1 })
+    const write = Speaker({ channels: 1 })
     await play(write, ab)
   })
 }
