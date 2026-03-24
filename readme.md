@@ -21,23 +21,12 @@ write(pcmBuffer, (err) => {
 write(null) // end playback
 ```
 
-### Node.js Writable
+### Writable
 
 ```js
-import writable from 'audio-speaker/stream'
+import SpeakerWritable from 'audio-speaker/stream'
 
-source.pipe(writable({ sampleRate: 44100, channels: 2 }))
-```
-
-### Browser
-
-Bundlers resolve to Web Audio API backend via the `browser` exports condition.
-
-```js
-import speaker from 'audio-speaker'
-
-let write = speaker({ sampleRate: 44100, channels: 2 })
-write(pcmBuffer, (err, frames) => {})
+source.pipe(SpeakerWritable({ sampleRate: 44100, channels: 2 }))
 ```
 
 ## Backends
