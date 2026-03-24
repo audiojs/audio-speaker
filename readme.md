@@ -21,7 +21,7 @@ write(pcmBuffer, (err) => {
 write(null) // end playback
 ```
 
-### Writable
+### Node Writable
 
 ```js
 import SpeakerWritable from 'audio-speaker/stream'
