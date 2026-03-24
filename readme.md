@@ -93,6 +93,12 @@ rm -rf artifacts
 gh run download --dir artifacts \
   -n speaker-darwin-arm64 -n speaker-darwin-x64 \
   -n speaker-linux-x64 -n speaker-linux-arm64 -n speaker-win32-x64
+
+# (fallback) If darwin-x64 CI is unavailable, cross-compile locally
+npx node-gyp@latest rebuild --arch=x64
+mkdir -p artifacts/speaker-darwin-x64
+cp build/Release/speaker.node artifacts/speaker-darwin-x64/
+
 for pkg in packages/speaker-*/; do
   cp artifacts/$(basename $pkg)/speaker.node $pkg/
   (cd $pkg && npm publish)
