@@ -1,6 +1,6 @@
 {
   "name": "audio-speaker",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "Output audio data to speaker in browser/node",
   "type": "module",
   "main": "./index.js",
