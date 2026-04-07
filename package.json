@@ -3,6 +3,7 @@
   "version": "2.1.0",
   "description": "Output audio data to speaker in browser/node",
   "type": "module",
+  "sideEffects": false,
   "main": "./index.js",
   "types": "./index.d.ts",
   "exports": {
