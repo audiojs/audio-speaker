@@ -33,9 +33,9 @@ const loaders = [
 for (const load of loaders) {
   try { addon = load(); break } catch {}
 }
-if (!addon) throw new Error('miniaudio addon not found — install @audio/speaker-' + plat + ' or run npm run build')
 
 export function open({ sampleRate = 44100, channels = 2, bitDepth = 16, bufferSize = 50, capture = false } = {}) {
+  if (!addon) throw new Error('miniaudio addon not found — install @audio/speaker-' + plat + ' or run npm run build')
   const handle = addon.open(sampleRate, channels, bitDepth, bufferSize, capture)
 
   return {

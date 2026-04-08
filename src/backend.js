@@ -1,17 +1,15 @@
 /**
- * Backend detection — static imports, tries in priority order
+ * Backend detection — static imports, open() tries in priority order
  */
-let miniaudio, process_, null_
-
-try { miniaudio = await import('./backends/miniaudio.js') } catch {}
-try { process_ = await import('./backends/process.js') } catch {}
-try { null_ = await import('./backends/null.js') } catch {}
+import { open as miniaudioOpen } from './backends/miniaudio.js'
+import { open as processOpen } from './backends/process.js'
+import { open as nullOpen } from './backends/null.js'
 
 const backends = [
-  miniaudio && { name: 'miniaudio', open: miniaudio.open },
-  process_ && { name: 'process', open: process_.open },
-  null_ && { name: 'null', open: null_.open },
-].filter(Boolean)
+  { name: 'miniaudio', open: miniaudioOpen },
+  { name: 'process', open: processOpen },
+  { name: 'null', open: nullOpen },
+]
 
 export function open(opts, preference) {
   const order = preference
