@@ -65,3 +65,20 @@ export default function Speaker(opts = {}) {
     if (ownCtx) ctx.close?.()
   }
 }
+
+/**
+ * Consume an async iterable of PCM chunks through the speaker.
+ * @param {AsyncIterable} source - async iterable yielding PCM buffers
+ * @param {object} opts - speaker options (sampleRate, channels, bitDepth, etc.)
+ * @returns {Promise<void>} resolves when source is exhausted
+ */
+Speaker.from = async function(source, opts) {
+  const write = Speaker(opts)
+  try {
+    for await (let chunk of source) {
+      await new Promise((resolve, reject) => write(chunk, err => err ? reject(err) : resolve()))
+    }
+  } finally {
+    write(null)
+  }
+}

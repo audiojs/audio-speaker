@@ -21,6 +21,16 @@ write(pcmBuffer, (err) => {
 write(null) // end playback
 ```
 
+### Async iterable
+
+Consume an async iterable source directly:
+
+```js
+import speaker from 'audio-speaker'
+
+await speaker.from(audioSource, { sampleRate: 44100, channels: 2 })
+```
+
 ### Stream
 
 ```js
