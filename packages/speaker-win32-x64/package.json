@@ -1,6 +1,6 @@
 {
   "name": "@audio/speaker-win32-x64",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "audio-speaker native addon for win32 x64",
   "license": "MIT",
   "repository": {
