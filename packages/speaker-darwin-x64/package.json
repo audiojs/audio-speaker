@@ -1,6 +1,6 @@
 {
   "name": "@audio/speaker-darwin-x64",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "audio-speaker native addon for darwin x64",
   "license": "MIT",
   "repository": {
